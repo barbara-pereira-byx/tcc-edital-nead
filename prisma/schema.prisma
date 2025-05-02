@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./database.db"
+}
+
+model Aviao {
+  id                      String   @id @default(uuid())
+  capacidade              Int
+  modelo                  String
+  nome_companhia          String
+  vooId                String
+  voos                    Voo[]
+}
+
+model Funcionario {
+  id                   String   @id @default(uuid())
+  nome                 String
+  data_nascimento      DateTime?
+  cpf                  String
+  email                String   @unique
+  cargo                String?
+  senha                String
+  numero_identificacao Int?
+  supervisorId         String?
+  supervisor           Funcionario? @relation("Supervisor", fields: [supervisorId], references: [id])
+  subordinados         Funcionario[] @relation("Supervisor")
+  reservas             Reserva[]
+}
+
+model Piloto {
+  id                      String @id @default(uuid())
+  nome                    String
+  data_nascimento         DateTime
+  licenca                 String @unique
+  email                   String
+  voos                    Voo[]
+}
+
+model Passageiro {
+  id                      String @id @default(uuid())
+  nome                    String
+  data_nascimento         DateTime?
+  cpf_passaporte          String   @unique
+  email                   String  @unique
+  genero                  Int?
+  nacionalidade           String?
+  reservas                Reserva[]
+}
+
+model Voo {
+  id                      String   @id @default(uuid())
+  origem                  String
+  destino                 String
+  numero                  Int
+  status                  Int
+  horario                 DateTime
+  aviaoId                 String
+  aviao                   Aviao   @relation(fields: [aviaoId], references: [id])
+  pilotoId                String
+  piloto                  Piloto  @relation(fields: [pilotoId], references: [id])
+  reservas                Reserva[]
+}
+
+model Reserva {
+  id                      String @id @default(uuid())
+  preco                   Float
+  assento                 Int
+  classe                  Int
+  passageiroId            String
+  passageiro              Passageiro @relation(fields: [passageiroId], references: [id])
+  funcionarioId           String
+  funcionario             Funcionario @relation(fields: [funcionarioId], references: [id])
+  vooId                   String
+  voo                     Voo        @relation(fields: [vooId], references: [id])
+  
+  @@unique([passageiroId, vooId])
+}

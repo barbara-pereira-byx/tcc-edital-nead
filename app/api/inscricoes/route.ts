@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
     // Verificar campos obrigatórios
     const camposObrigatorios = formulario.campos.filter((campo) => campo.obrigatorio === 1)
-    const camposPreenchidos = campos.map((campo) => campo.campoId)
+    const camposPreenchidos = campos.map((campo:any) => campo.campoId)
 
     for (const campo of camposObrigatorios) {
       if (!camposPreenchidos.includes(campo.id)) {

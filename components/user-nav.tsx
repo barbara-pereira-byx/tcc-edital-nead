@@ -23,12 +23,12 @@ export function UserNav() {
   const handleSignOut = async () => {
     setIsLoading(true)
     await signOut({ redirect: false })
-    router.push("/login")
+    router.push("/editais")
   }
 
   if (!session) {
     return (
-      <Link href="/login">
+      <Link href="/editais">
         <Button variant="outline">Entrar</Button>
       </Link>
     )
@@ -68,6 +68,12 @@ export function UserNav() {
         {isAdmin ? (
           <>
             <DropdownMenuItem asChild>
+              <Link href="/editais">Editais</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/inscricoes">Minhas inscrições</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
               <Link href="/gerenciar">Gerenciar Editais</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -77,7 +83,7 @@ export function UserNav() {
         ) : (
           <>
             <DropdownMenuItem asChild>
-              <Link href="/admin/editais/gerenciar">Editais Disponíveis</Link>
+              <Link href="/editais">Editais Disponíveis</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/inscricoes">Minhas Inscrições</Link>

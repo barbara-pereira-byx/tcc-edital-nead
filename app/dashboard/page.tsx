@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/editais")
   }
 
   const editais = await getEditais()

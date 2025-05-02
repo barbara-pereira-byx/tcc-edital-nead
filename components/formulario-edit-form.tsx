@@ -11,6 +11,7 @@ import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
 import { PlusCircle, Trash2, MoveUp, MoveDown } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CampoFormulario } from "@prisma/client"
 
 interface FormularioEditFormProps {
   formulario: any
@@ -32,15 +33,17 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
       rotulo: campo.rotulo,
       tipo: campo.tipo,
       obrigatorio: campo.obrigatorio,
+      secao: campo.secao || "Geral",
     })),
   )
 
   const tiposCampo = [
-    { valor: 0, nome: "Texto curto" },
-    { valor: 1, nome: "Texto longo" },
-    { valor: 2, nome: "Opções (Radio)" },
-    { valor: 3, nome: "Seleção (Select)" },
-    { valor: 4, nome: "Checkbox" },
+    { valor: "0", nome: "Texto" },
+    { valor: "1", nome: "Área de Texto" },
+    { valor: "3", nome: "Seleção (Select)" },
+    { valor: "4", nome: "Checkbox" },
+    { valor: "5", nome: "Data" },
+    { valor: "6", nome: "Arquivo" },
   ]
 
   const adicionarCampo = () => {
@@ -51,6 +54,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         rotulo: "",
         tipo: 0,
         obrigatorio: 1,
+        secao: "Geral",
       },
     ])
   }
@@ -191,29 +195,12 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Campos do Formulário</h3>
-          <Button type="button" variant="outline" size="sm" onClick={adicionarCampo}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Campo
-          </Button>
         </div>
 
-        {campos.map((campo, index) => (
+        {campos.map((campo: CampoFormulario, index: number) => (
           <div key={campo.id} className="border rounded-md p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor={`campo-${index}`}>Rótulo do Campo</Label>
-                <Input
-                  id={`campo-${index}`}
-                  value={campo.rotulo}
-                  onChange={(e) => {
-                    const novosCampos = [...campos]
-                    novosCampos[index].rotulo = e.target.value
-                    setCampos(novosCampos)
-                  }}
-                  placeholder="Ex: Nome Completo"
-                  required
-                />
-              </div>
+              <h4 className="font-semibold">Campo #{String(index + 1).padStart(3, "0")}</h4>
               <div className="flex items-center ml-2 space-x-1">
                 <Button
                   type="button"
@@ -233,7 +220,12 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                 >
                   <MoveDown className="h-4 w-4" />
                 </Button>
-                <Button type="button" variant="ghost" size="icon" onClick={() => removerCampo(index)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removerCampo(index)}
+                >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
               </div>
@@ -241,7 +233,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor={`tipo-${index}`}>Tipo de Campo</Label>
+                <Label htmlFor={`tipo-${index}`}>Tipo do Campo</Label>
                 <Select
                   value={campo.tipo.toString()}
                   onValueChange={(value) => {
@@ -255,14 +247,14 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {tiposCampo.map((tipo) => (
-                      <SelectItem key={tipo.valor} value={tipo.valor.toString()}>
+                      <SelectItem key={tipo.valor} value={tipo.valor}>
                         {tipo.nome}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 mt-6 md:mt-0">
                 <Switch
                   id={`obrigatorio-${index}`}
                   checked={campo.obrigatorio === 1}
@@ -272,10 +264,28 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                     setCampos(novosCampos)
                   }}
                 />
-                <Label htmlFor={`obrigatorio-${index}`}>Campo Obrigatório</Label>
+                <Label htmlFor={`obrigatorio-${index}`}>Obrigatório</Label>
               </div>
             </div>
 
+            {/* Nome / rótulo principal */}
+            <div className="space-y-2">
+              <Label htmlFor={`campo-${index}`}>Nome do Campo</Label>
+              <Input
+                id={`campo-${index}`}
+                value={campo.rotulo.includes("|") ? campo.rotulo.split("|")[0] : campo.rotulo}
+                onChange={(e) => {
+                  const novosCampos = [...campos]
+                  const complemento = campo.rotulo.includes("|") ? campo.rotulo.split("|")[1] : ""
+                  novosCampos[index].rotulo = `${e.target.value}${complemento ? `|${complemento}` : ""}`
+                  setCampos(novosCampos)
+                }}
+                placeholder="Ex: Nome Completo"
+                required
+              />
+            </div>
+
+            {/* Campo com opções (radio ou select) */}
             {(campo.tipo === 2 || campo.tipo === 3) && (
               <div className="space-y-2">
                 <Label htmlFor={`opcoes-${index}`}>Opções (separadas por vírgula)</Label>
@@ -293,6 +303,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
               </div>
             )}
 
+            {/* Campo checkbox */}
             {campo.tipo === 4 && (
               <div className="space-y-2">
                 <Label htmlFor={`texto-checkbox-${index}`}>Texto do Checkbox</Label>
@@ -309,8 +320,21 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                 />
               </div>
             )}
+
+            {/* Aviso para campo de arquivo */}
+            {campo.tipo === 6 && (
+              <div className="text-sm text-muted-foreground italic">
+                Este campo permitirá o envio de arquivos no formulário final.
+              </div>
+            )}
           </div>
         ))}
+        <div className="flex items-center">
+          <Button type="button" variant="outline" size="sm" onClick={adicionarCampo} className="ml-auto">
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Adicionar Campo
+          </Button>
+        </div>
       </div>
 
       <div className="flex justify-end">

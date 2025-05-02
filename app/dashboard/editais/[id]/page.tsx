@@ -12,7 +12,7 @@ export default async function EditalDetailPage({ params }: { params: { id: strin
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/editais")
   }
 
   const edital = await getEditalById(params.id)

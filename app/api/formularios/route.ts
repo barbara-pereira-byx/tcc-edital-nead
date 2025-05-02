@@ -35,11 +35,11 @@ export async function POST(req: Request) {
         dataInicio: new Date(dataInicio),
         dataFim: new Date(dataFim),
         ...(editalId && {
-          edital: {
-            connect: {
-              id: editalId,
-            },
+        edital: {
+          connect: {
+            id: editalId,
           },
+        },
         }),
       },
     })
@@ -52,12 +52,6 @@ export async function POST(req: Request) {
           tipo: convertTipoToInt(campo.tipo),
           obrigatorio: convertBoolToInt(campo.obrigatorio),
           formularioId: formulario.id,
-          // Adicionar metadados como JSON se necessário
-          metadados: {
-            categoria: campo.categoria,
-            tamanho: campo.tamanho,
-            opcoes: campo.opcoes,
-          },
         },
       })
     }

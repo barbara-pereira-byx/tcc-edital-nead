@@ -1,18 +1,17 @@
-import { redirect } from "next/navigation"
-import Link from "next/link"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { UserNav } from "@/components/user-nav"
-import { AdminNav } from "@/components/admin-nav"
-import { Button } from "@/components/ui/button"
-import { prisma } from "@/lib/prisma"
-import { AdminEditaisTable } from "@/components/admin/admin-editais-table"
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { prisma } from "@/lib/prisma";
+import { AdminEditaisTable } from "@/components/admin/admin-editais-table";
 
 export default async function GerenciarEditaisPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions);
 
   if (!session || session.user.tipo !== 1) {
-    redirect("/login")
+    redirect("/editais");
   }
 
   const editais = await prisma.edital.findMany({
@@ -31,16 +30,11 @@ export default async function GerenciarEditaisPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <AdminNav />
-          <div className="flex items-center gap-4">
-            <UserNav />
-          </div>
-        </div>
-      </header>
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
+          <Link href="/editais" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
+              ← Voltar para editais
+          </Link>
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-2xl font-bold">Gerenciar Editais</h1>
@@ -59,5 +53,5 @@ export default async function GerenciarEditaisPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

@@ -11,13 +11,10 @@ export function AdminNav({ className, ...props }: React.HTMLAttributes<HTMLEleme
 
   return (
     <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)} {...props}>
-      <Link href="/admin/editais" className="flex items-center space-x-2">
-        <Image src="/logo-nead.png" alt="NEAD Logo" width={80} height={30} className="h-auto" priority />
-      </Link>
       <Link
-        href="/admin/editais"
-        className={`text-sm font-medium transition-colors hover:text-red-600 ${
-          pathname === "/admin/editais" ? "text-red-600" : "text-muted-foreground"
+        href="/editais"
+        className={`text-sm font-medium transition-colors hover:text-primary ${
+          pathname === "/editais" ? "text-primary" : "text-muted-foreground"
         }`}
       >
         Editais
@@ -29,14 +26,6 @@ export function AdminNav({ className, ...props }: React.HTMLAttributes<HTMLEleme
         }`}
       >
         Minhas Inscrições
-      </Link>
-      <Link
-        href="/admin/editais/gerenciar"
-        className={`text-sm font-medium transition-colors hover:text-red-600 ${
-          pathname === "/gerenciar" ? "text-red-600" : "text-muted-foreground"
-        }`}
-      >
-        Gerenciar Editais
       </Link>
     </nav>
   )

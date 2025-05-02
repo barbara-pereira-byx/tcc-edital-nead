@@ -62,7 +62,7 @@ export default function CadastroPage() {
           title: "Cadastro realizado com sucesso",
           description: "Você já pode fazer login no sistema",
         })
-        router.push("/login")
+        router.push("/editais")
       } else {
         const error = await response.json()
         toast({
@@ -86,7 +86,6 @@ export default function CadastroPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center space-y-2 text-center">
-          <Image src="/logo-nead.png" alt="NEAD Logo" width={180} height={60} />
           <h1 className="text-2xl font-bold">Cadastro de Usuário</h1>
           <p className="text-sm text-muted-foreground">Preencha os dados abaixo para criar sua conta</p>
         </div>
@@ -135,7 +134,7 @@ export default function CadastroPage() {
           <div className="text-center text-sm">
             <p>
               Já tem uma conta?{" "}
-              <Link href="/login" className="text-blue-600 hover:underline">
+              <Link href="/editais" className="text-blue-600 hover:underline">
                 Faça login
               </Link>
             </p>

@@ -43,7 +43,7 @@ export default function RegisterPage() {
           title: "Cadastro realizado com sucesso",
           description: "Redirecionando para o login...",
         })
-        router.push("/login")
+        router.push("/editais")
       } else {
         toast({
           title: "Erro no cadastro",
@@ -95,7 +95,7 @@ export default function RegisterPage() {
         <CardFooter className="flex flex-col">
           <div className="mt-2 text-center text-sm">
             Já tem uma conta?{" "}
-            <Link href="/login" className="font-medium text-slate-900 hover:underline">
+            <Link href="/editais" className="font-medium text-slate-900 hover:underline">
               Faça login
             </Link>
           </div>

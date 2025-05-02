@@ -1,81 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./database.db"
+  url      = "file:./dev.db"
 }
 
-model Aviao {
-  id                      String   @id @default(uuid())
-  capacidade              Int
-  modelo                  String
-  nome_companhia          String
-  vooId                String
-  voos                    Voo[]
+model Usuario {
+  id                String              @id @default(cuid())
+  nome              String
+  email             String              @unique
+  cpf               String              @unique
+  senha             String
+  tipo              Int                 // 0: usuário comum, 1: administrador
+  formularios       FormularioUsuario[]
+  inscricoes        Inscricao[]         // Relacionamento com o modelo Inscricao
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
-model Funcionario {
-  id                   String   @id @default(uuid())
-  nome                 String
-  data_nascimento      DateTime?
-  cpf                  String
-  email                String   @unique
-  cargo                String?
-  senha                String
-  numero_identificacao Int?
-  supervisorId         String?
-  supervisor           Funcionario? @relation("Supervisor", fields: [supervisorId], references: [id])
-  subordinados         Funcionario[] @relation("Supervisor")
-  reservas             Reserva[]
+model Inscricao {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  editalId    String
+  edital      Edital   @relation(fields: [editalId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Piloto {
-  id                      String @id @default(uuid())
-  nome                    String
-  data_nascimento         DateTime
-  licenca                 String @unique
-  email                   String
-  voos                    Voo[]
+model Edital {
+  id                String              @id @default(cuid())
+  titulo            String
+  dataCriacao       DateTime            @default(now())
+  dataPublicacao    DateTime
+  dataEncerramento  DateTime?
+  secoes            SecaoEdital[]
+  formulario        Formulario?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  inscricoes        Inscricao[]         // Relacionamento com o modelo Inscricao
 }
 
-model Passageiro {
-  id                      String @id @default(uuid())
-  nome                    String
-  data_nascimento         DateTime?
-  cpf_passaporte          String   @unique
-  email                   String  @unique
-  genero                  Int?
-  nacionalidade           String?
-  reservas                Reserva[]
+model SecaoEdital {
+  id                String              @id @default(cuid())
+  titulo            String
+  edital            Edital              @relation(fields: [editalId], references: [id], onDelete: Cascade)
+  editalId          String
+  topicos           TopicoEdital[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
-model Voo {
-  id                      String   @id @default(uuid())
-  origem                  String
-  destino                 String
-  numero                  Int
-  status                  Int
-  horario                 DateTime
-  aviaoId                 String
-  aviao                   Aviao   @relation(fields: [aviaoId], references: [id])
-  pilotoId                String
-  piloto                  Piloto  @relation(fields: [pilotoId], references: [id])
-  reservas                Reserva[]
+model TopicoEdital {
+  id                String              @id @default(cuid())
+  texto             String              
+  secao             SecaoEdital         @relation(fields: [secaoEditalId], references: [id], onDelete: Cascade)
+  secaoEditalId     String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
-model Reserva {
-  id                      String @id @default(uuid())
-  preco                   Float
-  assento                 Int
-  classe                  Int
-  passageiroId            String
-  passageiro              Passageiro @relation(fields: [passageiroId], references: [id])
-  funcionarioId           String
-  funcionario             Funcionario @relation(fields: [funcionarioId], references: [id])
-  vooId                   String
-  voo                     Voo        @relation(fields: [vooId], references: [id])
-  
-  @@unique([passageiroId, vooId])
+model Formulario {
+  id                String                  @id @default(cuid())
+  titulo            String
+  dataInicio        DateTime
+  dataFim           DateTime
+  edital            Edital                  @relation(fields: [editalId], references: [id], onDelete: Cascade)
+  editalId          String                  @unique
+  campos            CampoFormulario[]
+  inscricoes        FormularioUsuario[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+}
+
+model CampoFormulario {
+  id                String              @id @default(cuid())
+  rotulo            String
+  tipo              Int                 // 0: texto, 1: textarea, 2: radio, 3: select, 4: checkbox
+  obrigatorio       Int                 // 0: não, 1: sim
+  formulario        Formulario          @relation(fields: [formularioId], references: [id], onDelete: Cascade)
+  formularioId      String
+  respostas         FormularioUsuarioCampo[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+model FormularioUsuario {
+  id                String                  @id @default(cuid())
+  dataHora          DateTime                @default(now())
+  usuario           Usuario                 @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId         String
+  formulario        Formulario              @relation(fields: [formularioId], references: [id], onDelete: Cascade)
+  formularioId      String
+  campos            FormularioUsuarioCampo[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+}
+
+model FormularioUsuarioCampo {
+  id                String              @id @default(cuid())
+  valor             String              
+  campo             CampoFormulario     @relation(fields: [campoFormularioId], references: [id], onDelete: Cascade)
+  campoFormularioId String
+  inscricao         FormularioUsuario   @relation(fields: [formularioUsuarioId], references: [id], onDelete: Cascade)
+  formularioUsuarioId String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }

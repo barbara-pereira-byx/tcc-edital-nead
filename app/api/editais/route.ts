@@ -78,33 +78,50 @@ export async function GET(req: Request) {
     }
 
     if (status === "abertos") {
-      where.formulario = {
-        NOT: null,
-        dataInicio: { lte: hoje },
-        dataFim: { gte: hoje },
-      }
+      where.OR = [
+        {
+          formulario: {
+            NOT: null,
+            dataInicio: { lte: hoje },
+            dataFim: { gte: hoje },
+          },
+        },
+        {
+          formulario: null,
+          dataPublicacao: { lte: hoje },
+          dataEncerramento: { gte: hoje },
+        },
+      ]
     }
-
+    
     if (status === "futuros") {
-      where.formulario = {
-        NOT: null,
-        dataInicio: { gt: hoje },
-      }
+      where.OR = [
+        {
+          formulario: {
+            NOT: null,
+            dataInicio: { gt: hoje }, // Formulário com data de início no futuro
+          },
+        },
+        {
+          formulario: null,
+          dataPublicacao: { gt: hoje }, // Edital sem formulário, mas com data de publicação no futuro
+        },
+      ];
     }
-
+    
     if (status === "encerrados") {
       where.OR = [
         {
           formulario: {
             NOT: null,
-            dataFim: { lt: hoje },
+            dataFim: { lt: hoje }, // Formulário com data de fim no passado
           },
         },
         {
           formulario: null,
-          dataEncerramento: { lt: hoje },
+          dataEncerramento: { lt: hoje }, // Edital sem formulário, mas com data de encerramento no passado
         },
-      ]
+      ];
     }
 
     const editais = await prisma.edital.findMany({

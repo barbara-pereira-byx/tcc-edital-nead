@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if user is authenticated
   if (!token) {
-    const url = new URL("/login", request.url)
+    const url = new URL("/editais", request.url)
     url.searchParams.set("callbackUrl", request.nextUrl.pathname)
     return NextResponse.redirect(url)
   }

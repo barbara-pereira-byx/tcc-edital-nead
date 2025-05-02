@@ -74,44 +74,6 @@ export function EditalFilter() {
         </RadioGroup>
       </div>
 
-      <div className="space-y-2">
-        <h3 className="text-sm font-medium">Tipo de Edital</h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="tipo-bolsa"
-              checked={tipos.includes("bolsa")}
-              onCheckedChange={() => handleTipoChange("bolsa")}
-            />
-            <Label htmlFor="tipo-bolsa">Bolsas</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="tipo-estagio"
-              checked={tipos.includes("estagio")}
-              onCheckedChange={() => handleTipoChange("estagio")}
-            />
-            <Label htmlFor="tipo-estagio">Estágios</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="tipo-monitoria"
-              checked={tipos.includes("monitoria")}
-              onCheckedChange={() => handleTipoChange("monitoria")}
-            />
-            <Label htmlFor="tipo-monitoria">Monitorias</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="tipo-extensao"
-              checked={tipos.includes("extensao")}
-              onCheckedChange={() => handleTipoChange("extensao")}
-            />
-            <Label htmlFor="tipo-extensao">Extensão</Label>
-          </div>
-        </div>
-      </div>
-
       <div className="flex flex-col space-y-2">
         <Button type="submit">Aplicar Filtros</Button>
         <Button type="button" variant="outline" onClick={handleReset}>

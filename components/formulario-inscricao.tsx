@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -21,9 +20,9 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [formValues, setFormValues] = useState<Record<string, string>>({})
+  const [formValues, setFormValues] = useState<Record<string, any>>({})
 
-  const handleChange = (id: string, value: string) => {
+  const handleChange = (id: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [id]: value }))
   }
 
@@ -46,21 +45,22 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
     }
 
     try {
-      // Preparar dados para envio
-      const camposPreenchidos = Object.entries(formValues).map(([campoId, valor]) => ({
-        campoId,
-        valor,
-      }))
+      const formData = new FormData()
+
+      // Adicionar os campos ao FormData
+      Object.entries(formValues).forEach(([campoId, valor]) => {
+        if (valor instanceof File) {
+          formData.append(campoId, valor) // Adiciona o arquivo
+        } else {
+          formData.append(campoId, valor) // Adiciona valores normais
+        }
+      })
+
+      formData.append("formularioId", formulario.id)
 
       const response = await fetch("/api/inscricoes", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          formularioId: formulario.id,
-          campos: camposPreenchidos,
-        }),
+        body: formData,
       })
 
       if (response.ok) {
@@ -145,6 +145,36 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
               onCheckedChange={(checked) => handleChange(campo.id, checked ? "true" : "false")}
             />
             <Label htmlFor={campo.id}>{campo.rotulo.includes("|") ? campo.rotulo.split("|")[1] : "Concordo"}</Label>
+          </div>
+        )
+      case 5: // Data
+        return (
+          <Input
+            type="date"
+            id={campo.id}
+            value={formValues[campo.id] || ""}
+            onChange={(e) => handleChange(campo.id, e.target.value)}
+            required={campo.obrigatorio === 1}
+          />
+        )
+      case 6: // Arquivo
+        return (
+          <div>
+            <Input
+              type="file"
+              id={campo.id}
+              accept=".pdf,.doc,.docx"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  handleChange(campo.id, file) // Armazena o arquivo no estado
+                }
+              }}
+              required={campo.obrigatorio === 1}
+            />
+            <p className="text-sm text-muted-foreground italic">
+              Apenas arquivos nos formatos PDF, DOC ou DOCX são permitidos.
+            </p>
           </div>
         )
       default:

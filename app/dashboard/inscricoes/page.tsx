@@ -12,7 +12,7 @@ export default async function InscricoesPage() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/editais")
   }
 
   const inscricoes = await getInscricoes()

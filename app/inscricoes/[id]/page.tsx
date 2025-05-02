@@ -4,19 +4,16 @@ import Image from "next/image"
 import Link from "next/link"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { MainNav } from "@/components/main-nav"
-import { UserNav } from "@/components/user-nav"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CancelInscricaoButton } from "@/components/cancel-inscricao-button"
-import { AdminNav } from "@/components/admin-nav"
 
 export default async function InscricaoDetalhesPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
 
   if (!session) {
-    redirect("/login")
+    redirect("/editais")
   }
   
   // Obter o tipo do usuário
@@ -58,17 +55,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-6">
-            <Image src="/logo-nead.png" alt="NEAD Logo" width={120} height={40} />
-            {userType === 0 ? <MainNav /> : <AdminNav />}
-          </div>
-          <div className="flex items-center gap-4">
-            <UserNav />
-          </div>
-        </div>
-      </header>
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
           <div className="mb-6">
@@ -153,16 +139,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
           </div>
         </div>
       </main>
-      <footer className="border-t bg-white">
-        <div className="container py-6 px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center">
-              <Image src="/logo-nead.png" alt="NEAD Logo" width={100} height={30} />
-              <p className="text-sm text-muted-foreground ml-4">© 2024 Sistema de Editais</p>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

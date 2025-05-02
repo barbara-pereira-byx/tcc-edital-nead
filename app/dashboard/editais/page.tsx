@@ -12,7 +12,7 @@ export default async function EditaisPage() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/editais")
   }
 
   const editais = await getEditais()

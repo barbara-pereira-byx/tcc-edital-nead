@@ -2,17 +2,16 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { UserNav } from "@/components/user-nav"
-import { AdminNav } from "@/components/admin-nav"
 import { EditalEditForm } from "@/components/edital-edit-form"
 import { FormularioEditForm } from "@/components/formulario-edit-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 
 export default async function EditarEditalPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.tipo !== 1) {
-    redirect("/login")
+    redirect("/ediatis")
   }
 
   const edital = await prisma.edital.findUnique({
@@ -44,16 +43,11 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="bg-white border-b sticky top-0 z-10">
-        <div className="container flex h-16 items-center justify-between px-4">
-          <AdminNav />
-          <div className="flex items-center gap-4">
-            <UserNav />
-          </div>
-        </div>
-      </header>
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
+          <Link href="/gerenciar" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
+              ← Voltar para gerenciador de editais
+          </Link>
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Editar Edital</h1>
             <p className="text-muted-foreground">Edite as informações do edital e seu formulário de inscrição</p>

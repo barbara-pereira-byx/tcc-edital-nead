@@ -12,7 +12,7 @@ export default async function InscricaoDetailPage({ params }: { params: { id: st
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/ediatis")
   }
 
   const inscricao = await getInscricaoById(params.id)

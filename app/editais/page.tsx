@@ -1,6 +1,5 @@
 // app/editais/page.tsx
 import { getServerSession } from "next-auth/next"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
@@ -79,6 +78,7 @@ export default async function EditaisPage({
         <div className="container px-4">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Editais Disponíveis</h1>
+            {/* Campo de busca */}
             <div className="flex items-center gap-4">
               <form className="flex w-full max-w-sm items-center space-x-2">
                 <Input type="search" placeholder="Pesquisar por título..." name="search" defaultValue={search} />
@@ -89,13 +89,6 @@ export default async function EditaisPage({
 
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 md:col-span-3">
-              <Card>
-                <CardContent className="p-4">
-                  <h2 className="font-semibold mb-4">Filtrar</h2>
-                  <EditalFilter />
-                </CardContent>
-              </Card>
-            
               {/* Menu do cliente */}
               <div className="col-span-12 md:col-span-3">
                 <Card>
@@ -104,6 +97,13 @@ export default async function EditaisPage({
                   </CardContent>
                 </Card>
               </div>
+              {/* Filtro */}
+              <Card>
+                <CardContent className="p-4">
+                  <h2 className="font-semibold mb-4">Filtrar</h2>
+                  <EditalFilter />
+                </CardContent>
+              </Card>
             </div>
             <div className="col-span-12 md:col-span-9">
               {editais.length === 0 ? (

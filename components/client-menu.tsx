@@ -79,10 +79,12 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
     );
   }
 
+  // Modal de login, caso não autenticado
   if (!session) {
     return (
-      <div className="space-y-4 bg-white p-6 shadow-sm rounded-lg">
+      <div className="space-y-4 bg-white shadow-sm rounded-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
+          <h2 className="font-semibold mb-4">Login</h2>
           <div className="space-y-2">
             <Label htmlFor="cpf">Digite seu CPF</Label>
             <Input
@@ -109,28 +111,11 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
             {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
-
-        <div className="text-center text-sm">
-          <p>
-            Não tem login?{" "}
-            <Link href="/cadastro" className="text-blue-600 hover:underline">
-              Cadastre-se
-            </Link>
-          </p>
-          <p>
-            Esqueceu sua senha?{" "}
-            <Link
-              href="/recuperar-senha"
-              className="text-blue-600 hover:underline"
-            >
-              Clique aqui
-            </Link>
-          </p>
-        </div>
       </div>
     );
   }
 
+  // Modal de menu, caso autenticado
   return (
     <div className="bg-white p-6 shadow-sm rounded-lg">
       <h2 className="text-lg font-bold mb-4">Menu</h2>

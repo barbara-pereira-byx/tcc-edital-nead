@@ -111,6 +111,14 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
             {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
+        <div className="text-center text-sm">
+            <p>
+              Não tem login?{" "}
+              <Link href="/cadastro" className="text-blue-600 hover:underline">
+                Cadastre-se
+              </Link>
+            </p>
+          </div>
       </div>
     );
   }

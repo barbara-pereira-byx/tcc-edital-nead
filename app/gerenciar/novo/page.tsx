@@ -15,11 +15,9 @@ export default function NovoEditalPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("edital")
   const [editalId, setEditalId] = useState<string | null>(null)
-  const [editalCodigo, setEditalCodigo] = useState<string | null>(null)
 
   const handleEditalCreated = (id: string, codigo: string) => {
     setEditalId(id)
-    setEditalCodigo(codigo)
     toast({
       title: "Edital criado com sucesso",
       description: "Agora você pode configurar o formulário de inscrição",
@@ -73,7 +71,6 @@ export default function NovoEditalPage() {
                   <CardContent>
                     <FormularioForm
                       editalId={editalId}
-                      editalCodigo={editalCodigo || ""}
                       onFormularioCreated={handleFormularioCreated}
                     />
                   </CardContent>

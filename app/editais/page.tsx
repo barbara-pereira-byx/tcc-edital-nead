@@ -58,14 +58,6 @@ export default async function EditaisPage({
     take: perPage,
     include: {
       formulario: true,
-      secoes: {
-        take: 1,
-        include: {
-          topicos: {
-            take: 1,
-          },
-        },
-      },
     },
   })
 

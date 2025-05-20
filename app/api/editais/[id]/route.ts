@@ -48,9 +48,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     const body = await req.json()
-    const { titulo, dataPublicacao, dataEncerramento, secoes } = body
+    const { titulo, dataPublicacao, dataEncerramento } = body
 
-    if (!titulo || !dataPublicacao || !secoes || secoes.length === 0) {
+    if (!titulo || !dataPublicacao) {
       return NextResponse.json({ message: "Dados incompletos" }, { status: 400 })
     }
 
@@ -79,88 +79,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         dataEncerramento: dataEncerramento ? new Date(dataEncerramento) : null,
       },
     })
-
-    // Processar seções e tópicos
-    for (const secao of secoes) {
-      if (secao.id.startsWith("temp-")) {
-        // Nova seção
-        const secaoCriada = await prisma.secaoEdital.create({
-          data: {
-            titulo: secao.titulo,
-            editalId: edital.id,
-          },
-        })
-
-        // Criar tópicos para a nova seção
-        for (const topico of secao.topicos) {
-          await prisma.topicoEdital.create({
-            data: {
-              texto: topico.texto,
-              secaoEditalId: secaoCriada.id,
-            },
-          })
-        }
-      } else {
-        // Seção existente
-        const secaoExistente = editalExistente.secoes.find((s) => s.id === secao.id)
-
-        if (secaoExistente) {
-          // Atualizar seção
-          await prisma.secaoEdital.update({
-            where: { id: secao.id },
-            data: {
-              titulo: secao.titulo,
-            },
-          })
-
-          // Processar tópicos
-          for (const topico of secao.topicos) {
-            if (topico.id.startsWith("temp-")) {
-              // Novo tópico
-              await prisma.topicoEdital.create({
-                data: {
-                  texto: topico.texto,
-                  secaoEditalId: secao.id,
-                },
-              })
-            } else {
-              // Tópico existente
-              const topicoExistente = secaoExistente.topicos.find((t) => t.id === topico.id)
-
-              if (topicoExistente) {
-                // Atualizar tópico
-                await prisma.topicoEdital.update({
-                  where: { id: topico.id },
-                  data: {
-                    texto: topico.texto,
-                  },
-                })
-              }
-            }
-          }
-
-          // Remover tópicos que não estão mais presentes
-          const topicosIds = secao.topicos.map((t) => t.id).filter((id) => !id.startsWith("temp-"))
-          const topicosParaRemover = secaoExistente.topicos.filter((t) => !topicosIds.includes(t.id))
-
-          for (const topico of topicosParaRemover) {
-            await prisma.topicoEdital.delete({
-              where: { id: topico.id },
-            })
-          }
-        }
-      }
-    }
-
-    // Remover seções que não estão mais presentes
-    const secoesIds = secoes.map((s) => s.id).filter((id) => !id.startsWith("temp-"))
-    const secoesParaRemover = editalExistente.secoes.filter((s) => !secoesIds.includes(s.id))
-
-    for (const secao of secoesParaRemover) {
-      await prisma.secaoEdital.delete({
-        where: { id: secao.id },
-      })
-    }
 
     return NextResponse.json({ id: edital.id })
   } catch (error) {

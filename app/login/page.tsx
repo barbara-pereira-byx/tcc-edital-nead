@@ -115,6 +115,14 @@ export default function LoginPage() {
                 Clique aqui
               </Link>
             </p>
+            <div className="text-center text-sm">
+              <p>
+                Não tem login?{" "}
+                <Link href="/cadastro" className="text-blue-600 hover:underline">
+                  Cadastre-se
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

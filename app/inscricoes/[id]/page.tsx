@@ -1,34 +1,26 @@
 import { getServerSession } from "next-auth/next"
 import { redirect, notFound } from "next/navigation"
-import Image from "next/image"
 import Link from "next/link"
+import { ChevronLeft, FileText, Download } from "lucide-react"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { CancelInscricaoButton } from "@/components/cancel-inscricao-button"
+import { Separator } from "@/components/ui/separator"
 
 export default async function InscricaoDetalhesPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
 
   if (!session) {
-    redirect("/editais")
+    redirect("/login")
   }
-  
-  // Obter o tipo do usuário
-  const user = await prisma.usuario.findUnique({
-    where: { email: session.user?.email },
-    select: { tipo: true },
-  });
 
-  const userType = user?.tipo ?? 0;
+  // Buscar a inscrição com todos os detalhes
   const inscricao = await prisma.formularioUsuario.findUnique({
-    where: {
-      id: params.id,
-      usuarioId: session.user.id,
-    },
+    where: { id: params.id },
     include: {
+      usuario: true,
       formulario: {
         include: {
           edital: true,
@@ -40,7 +32,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
           campo: true,
         },
       },
-      usuario: true,
     },
   })
 
@@ -48,95 +39,118 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     notFound()
   }
 
-  // Verificar se o período de inscrições ainda está aberto para permitir cancelamento
-  const hoje = new Date()
-  const dataFim = inscricao.formulario.dataFim ? new Date(inscricao.formulario.dataFim) : null
-  const podeEditar = dataFim && hoje <= dataFim
+  // Verificar se o usuário tem permissão para ver esta inscrição
+  const isAdmin = session.user.tipo === 1
+  const isOwner = inscricao.usuarioId === session.user.id
+
+  if (!isAdmin && !isOwner) {
+    redirect("/inscricoes")
+  }
+
+  // Formatar data
+  const formatarData = (data: Date) => {
+    return new Date(data).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 bg-slate-50 py-8">
-        <div className="container px-4">
-          <div className="mb-6">
-            <Link href="/inscricoes" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
-              ← Voltar para minhas inscrições
-            </Link>
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">{inscricao.formulario.edital.titulo}</h1>
-              <Badge>Inscrito</Badge>
+        <div className="container px-4 max-w-3xl mx-auto">
+          <Link
+            href="/inscricoes"
+            className="flex items-center text-sm text-blue-600 hover:text-blue-800 mb-4 transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Voltar para minhas inscrições
+          </Link>
+
+          <div className="bg-white rounded-lg shadow-sm p-6 border border-slate-200 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">{inscricao.formulario.edital.titulo}</h1>
+                <p className="text-slate-500">Inscrição realizada em {formatarData(inscricao.dataHora)}</p>
+              </div>
+              <Badge className="self-start md:self-auto">Inscrito</Badge>
             </div>
-            <p className="text-muted-foreground mt-2">
-              Inscrição realizada em{" "}
-              {new Date(inscricao.dataHora).toLocaleDateString("pt-BR", {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </p>
           </div>
 
-          <div className="grid gap-6">
-          <Card>
+          <Card className="mb-6">
             <CardHeader>
               <CardTitle>Dados da Inscrição</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {inscricao.campos.map((resposta: { id: string; campo: { rotulo: string }; valor: string }) => (
-                  <div key={resposta.id} className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <div className="font-medium">{resposta.campo.rotulo}</div>
-                    <div className="text-muted-foreground">{resposta.valor}</div>
+            <CardContent className="space-y-4">
+              {inscricao.campos.map((resposta) => {
+                const campo = resposta.campo
+                const rotulo = campo.rotulo.includes("|") ? campo.rotulo.split("|")[0] : campo.rotulo
+                const isArquivo = campo.tipo === 6
+
+                return (
+                  <div key={resposta.id} className="grid grid-cols-3 gap-4 py-2 border-b">
+                    <div className="font-medium">{rotulo}</div>
+                    <div className="col-span-2">
+                      {isArquivo ? (
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-blue-600" />
+                          <span>{resposta.valor || "-"}</span>
+                          <Button variant="outline" size="sm" asChild className="ml-2">
+                            <a href={`/api/arquivos/${resposta.id}`} target="_blank" rel="noopener noreferrer">
+                              <Download className="h-4 w-4 mr-1" /> Abrir
+                            </a>
+                          </Button>
+                        </div>
+                      ) : (
+                        resposta.valor || "-"
+                      )}
+                    </div>
                   </div>
-                ))}
-              </div>
+                )
+              })}
             </CardContent>
           </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações do Edital</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="font-medium">Data de Publicação</div>
-                    <div className="text-muted-foreground">
-                      {new Date(inscricao.formulario.edital.dataPublicacao).toLocaleDateString("pt-BR")}
-                    </div>
-                  </div>
-                  {inscricao.formulario.edital.dataEncerramento && (
-                    <div>
-                      <div className="font-medium">Data de Encerramento</div>
-                      <div className="text-muted-foreground">
-                        {new Date(inscricao.formulario.edital.dataEncerramento).toLocaleDateString("pt-BR")}
-                      </div>
-                    </div>
-                  )}
-                  <div>
-                    <div className="font-medium">Período de Inscrições</div>
-                    <div className="text-muted-foreground">
-                      {new Date(inscricao.formulario.dataInicio).toLocaleDateString("pt-BR")} a{" "}
-                      {new Date(inscricao.formulario.dataFim).toLocaleDateString("pt-BR")}
-                    </div>
-                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações do Edital</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-slate-500">Data de Publicação</h3>
+                  <p>{formatarData(inscricao.formulario.edital.dataPublicacao)}</p>
                 </div>
-                <div className="mt-4">
-                  <Link href={`/editais/${inscricao.formulario.editalId}`}>
-                    <Button variant="outline">Ver Edital Completo</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+                {inscricao.formulario.edital.dataEncerramento && (
+                  <div>
+                    <h3 className="text-sm font-medium text-slate-500">Data de Encerramento</h3>
+                    <p>{formatarData(inscricao.formulario.edital.dataEncerramento)}</p>
+                  </div>
+                )}
+              </div>
 
-            <div className="flex justify-end gap-4">
-              <Link href="/inscricoes">
-                <Button variant="outline">Voltar</Button>
-              </Link>
-              {podeEditar && <CancelInscricaoButton inscricaoId={inscricao.id} />}
-            </div>
-          </div>
+              <Separator />
+
+              <div>
+                <h3 className="text-sm font-medium text-slate-500 mb-2">Período de Inscrições</h3>
+                <p>
+                  {formatarData(inscricao.formulario.dataInicio)} a {formatarData(inscricao.formulario.dataFim)}
+                </p>
+              </div>
+
+              <div className="flex justify-between mt-4">
+                <Button variant="outline" asChild>
+                  <Link href={`/editais/${inscricao.formulario.edital.id}`}>Ver Edital Completo</Link>
+                </Button>
+                <Button variant="destructive" asChild>
+                  <Link href={`/inscricoes/${inscricao.id}/cancelar`}>Cancelar Inscrição</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

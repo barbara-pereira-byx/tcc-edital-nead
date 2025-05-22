@@ -6,8 +6,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
-import { PlusCircle, Trash2, MoveUp, MoveDown } from 'lucide-react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PlusCircle, Trash2, MoveUp, MoveDown } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
 interface FormularioFormProps {
@@ -45,7 +51,6 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   const tiposCampo = [
     { valor: "0", nome: "Texto" },
     { valor: "1", nome: "Área de Texto" },
-    { valor: "2", nome: "Opções (Radio)" },
     { valor: "3", nome: "Seleção (Select)" },
     { valor: "4", nome: "Checkbox" },
     { valor: "5", nome: "Data" },
@@ -103,7 +108,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     e.preventDefault()
     setIsLoading(true)
 
-    if (!titulo) {
+    if (!titulo.trim()) {
       toast({
         title: "Erro ao criar formulário",
         description: "O título do formulário é obrigatório",
@@ -133,9 +138,18 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
       return
     }
 
-    // Verificar se todos os campos têm nome
+    if (campos.length === 0) {
+      toast({
+        title: "Erro ao criar formulário",
+        description: "O formulário deve ter pelo menos um campo",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     for (const campo of campos) {
-      if (!campo.nome) {
+      if (!campo.nome.trim()) {
         toast({
           title: "Erro ao criar formulário",
           description: "Todos os campos devem ter um nome",
@@ -215,10 +229,6 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Campos do Formulário</h3>
-          <Button type="button" variant="outline" size="sm" onClick={adicionarCampo}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Campo
-          </Button>
         </div>
 
         {campos.map((campo, index) => (
@@ -310,46 +320,48 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
                     <SelectValue placeholder="Selecione a categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categorias.map((categoria) => (
-                      <SelectItem key={categoria} value={categoria}>
-                        {categoria}
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id={`obrigatorio-${index}`}
+                  checked={campo.obrigatorio}
+                  onCheckedChange={(checked) => {
+                    const novosCampos = [...campos]
+                    novosCampos[index].obrigatorio = checked as boolean
+                    setCampos(novosCampos)
+                  }}
+                />
+                <Label htmlFor={`obrigatorio-${index}`}>Obrigatório</Label>
+              </div>
+            </div>
+
+            {(campo.tipo === "0" || campo.tipo === "1") && (
               <div className="space-y-2">
-                <Label htmlFor={`tamanho-${index}`}>Tamanho</Label>
+                <Label htmlFor={`tamanho-${index}`}>Tamanho Máximo</Label>
                 <Input
                   id={`tamanho-${index}`}
                   type="number"
+                  min={1}
+                  max={255}
                   value={campo.tamanho}
                   onChange={(e) => {
                     const novosCampos = [...campos]
                     novosCampos[index].tamanho = e.target.value
                     setCampos(novosCampos)
                   }}
-                  placeholder="Ex: 100"
-                  min="1"
-                  max="1000"
                 />
               </div>
-            </div>
+            )}
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id={`obrigatorio-${index}`}
-                checked={campo.obrigatorio}
-                onCheckedChange={(checked) => {
-                  const novosCampos = [...campos]
-                  novosCampos[index].obrigatorio = checked
-                  setCampos(novosCampos)
-                }}
-              />
-              <Label htmlFor={`obrigatorio-${index}`}>Campo Obrigatório</Label>
-            </div>
-
-            {(campo.tipo === "2" || campo.tipo === "3") && (
+            {campo.tipo === "3" && (
               <div className="space-y-2">
                 <Label htmlFor={`opcoes-${index}`}>Opções (separadas por vírgula)</Label>
                 <Input
@@ -369,8 +381,15 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
       </div>
 
       <div className="flex justify-end">
+        <Button type="button" variant="outline" size="sm" onClick={adicionarCampo}>
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Campo
+        </Button>
+      </div>
+
+      <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Criando..." : "Criar Formulário"}
+          {isLoading ? "Salvando..." : "Criar Formulário"}
         </Button>
       </div>
     </form>

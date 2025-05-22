@@ -100,7 +100,7 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
       {editais.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-muted-foreground">Nenhum edital encontrado</p>
-          <Link href="/admin/editais/novo">
+          <Link href="/gerenciar/novo">
             <Button className="mt-4 bg-red-600 hover:bg-red-700">Criar Novo Edital</Button>
           </Link>
         </div>

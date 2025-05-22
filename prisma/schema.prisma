@@ -16,9 +16,9 @@ model Usuario {
   email             String              @unique
   cpf               String              @unique
   senha             String
-  tipo              Int                 // 0: usuário comum, 1: administrador
+  tipo              Int                 
   formularios       FormularioUsuario[]
-  inscricoes        Inscricao[]         // Relacionamento com o modelo Inscricao
+  inscricoes        Inscricao[]         
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
@@ -39,30 +39,20 @@ model Edital {
   dataCriacao       DateTime            @default(now())
   dataPublicacao    DateTime
   dataEncerramento  DateTime?
-  secoes            SecaoEdital[]
   formulario        Formulario?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
-  inscricoes        Inscricao[]         // Relacionamento com o modelo Inscricao
+  inscricoes        Inscricao[]        
+  senha             String
+  arquivos          ArquivoEdital[]
 }
 
-model SecaoEdital {
+model ArquivoEdital {
   id                String              @id @default(cuid())
-  titulo            String
-  edital            Edital              @relation(fields: [editalId], references: [id], onDelete: Cascade)
-  editalId          String
-  topicos           TopicoEdital[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-}
-
-model TopicoEdital {
-  id                String              @id @default(cuid())
-  texto             String              
-  secao             SecaoEdital         @relation(fields: [secaoEditalId], references: [id], onDelete: Cascade)
-  secaoEditalId     String
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  url               String
+  rotulo            String
+  edital            Edital?             @relation(fields: [editalId], references: [id]) // Relacionamento com Edital
+  editalId         String?
 }
 
 model Formulario {
@@ -81,7 +71,7 @@ model Formulario {
 model CampoFormulario {
   id                String              @id @default(cuid())
   rotulo            String
-  tipo              Int                 // 0: texto, 1: textarea, 2: radio, 3: select, 4: checkbox
+  tipo              Int                 // 0: texto, 1: textarea, 2: radio, 3: select, 4: checkbox, 5: data, 6: arquivo
   obrigatorio       Int                 // 0: não, 1: sim
   formulario        Formulario          @relation(fields: [formularioId], references: [id], onDelete: Cascade)
   formularioId      String
@@ -98,6 +88,7 @@ model FormularioUsuario {
   formulario        Formulario              @relation(fields: [formularioId], references: [id], onDelete: Cascade)
   formularioId      String
   campos            FormularioUsuarioCampo[]
+  arquivos          ArquivoUsuario[]        // Relação com os arquivos enviados pelo usuário
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
 }
@@ -109,6 +100,23 @@ model FormularioUsuarioCampo {
   campoFormularioId String
   inscricao         FormularioUsuario   @relation(fields: [formularioUsuarioId], references: [id], onDelete: Cascade)
   formularioUsuarioId String
+  arquivo           ArquivoUsuario?     // Relação opcional com um arquivo (para campos do tipo arquivo)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+}
+
+// Nova tabela para armazenar arquivos enviados pelos usuários
+model ArquivoUsuario {
+  id                String                  @id @default(cuid())
+  nomeOriginal      String                  // Nome original do arquivo
+  nomeArmazenado    String                  // Nome do arquivo no sistema de arquivos
+  tamanho           Int                     // Tamanho do arquivo em bytes
+  tipo              String                  // Tipo MIME do arquivo
+  caminho           String                  // Caminho relativo para o arquivo
+  campo             FormularioUsuarioCampo? @relation(fields: [campoId], references: [id], onDelete: Cascade)
+  campoId           String?                 @unique // Um campo pode ter apenas um arquivo
+  inscricao         FormularioUsuario       @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
+  inscricaoId       String                  // Relação com a inscrição
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
 }

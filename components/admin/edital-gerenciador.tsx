@@ -150,7 +150,7 @@ export function EditalGerenciador({ editalId }: EditalGerenciadorProps) {
           </Tabs>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => router.push("/admin/editais")}>
+          <Button variant="outline" onClick={() => router.push("/editais")}>
             Voltar
           </Button>
         </CardFooter>

@@ -27,6 +27,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   const [dataFim, setDataFim] = useState<Date | undefined>(
     formulario.dataFim ? new Date(formulario.dataFim) : undefined,
   )
+  // Ajuste aqui: adiciona campo arquivoFile para armazenar o arquivo selecionado (somente para tipo 6)
   const [campos, setCampos] = useState(
     formulario.campos.map((campo: any) => ({
       id: campo.id,
@@ -34,6 +35,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
       tipo: campo.tipo,
       obrigatorio: campo.obrigatorio,
       secao: campo.secao || "Geral",
+      arquivoFile: null as File | null, // novo campo para arquivo
     })),
   )
 
@@ -55,6 +57,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         tipo: 0,
         obrigatorio: 1,
         secao: "Geral",
+        arquivoFile: null,
       },
     ])
   }
@@ -131,6 +134,8 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
     }
 
     try {
+      // Se quiser enviar arquivos, precisa usar FormData e ajustar backend para multipart/form-data.
+      // Aqui envio só JSON sem arquivos para manter compatibilidade, mas você pode adaptar:
       const response = await fetch(`/api/formularios/${formulario.id}`, {
         method: "PUT",
         headers: {
@@ -140,7 +145,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           titulo,
           dataInicio,
           dataFim,
-          campos,
+          campos: campos.map(({ arquivoFile, ...rest }) => rest), // exclui arquivoFile do JSON
         }),
       })
 
@@ -197,7 +202,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           <h3 className="text-lg font-medium">Campos do Formulário</h3>
         </div>
 
-        {campos.map((campo: CampoFormulario, index: number) => (
+        {campos.map((campo: CampoFormulario & { arquivoFile?: File | null }, index: number) => (
           <div key={campo.id} className="border rounded-md p-4 space-y-4">
             <div className="flex items-center justify-between">
               <h4 className="font-semibold">Campo #{String(index + 1).padStart(3, "0")}</h4>
@@ -239,6 +244,10 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   onValueChange={(value) => {
                     const novosCampos = [...campos]
                     novosCampos[index].tipo = Number.parseInt(value)
+                    // Reset arquivoFile ao mudar tipo
+                    if (Number.parseInt(value) !== 6) {
+                      novosCampos[index].arquivoFile = null
+                    }
                     setCampos(novosCampos)
                   }}
                 >
@@ -318,13 +327,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   }}
                   placeholder="Ex: Concordo com os termos"
                 />
-              </div>
-            )}
-
-            {/* Aviso para campo de arquivo */}
-            {campo.tipo === 6 && (
-              <div className="text-sm text-muted-foreground italic">
-                Este campo permitirá o envio de arquivos no formulário final.
               </div>
             )}
           </div>

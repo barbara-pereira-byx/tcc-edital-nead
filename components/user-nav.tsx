@@ -77,7 +77,7 @@ export function UserNav() {
               <Link href="/gerenciar">Gerenciar Editais</Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/admin/usuarios">Gerenciar Usuários</Link>
+              <Link href="/usuarios">Gerenciar Usuários</Link>
             </DropdownMenuItem>
           </>
         ) : (

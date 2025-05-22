@@ -1,51 +1,80 @@
+"use client"
+
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Calendar, Clock, Users } from "lucide-react"
+import type { Edital } from "@/lib/data"
 
 interface EditalCardProps {
-  edital: any
+  edital: Edital
 }
 
 export function EditalCard({ edital }: EditalCardProps) {
-  // Verificar se o edital está no período de inscrições
-  const hoje = new Date()
-  const dataInicio = edital.formulario?.dataInicio ? new Date(edital.formulario.dataInicio) : null
-  const dataFim = edital.formulario?.dataFim ? new Date(edital.formulario.dataFim) : null
+  // Determinar o status do edital
+  const getStatus = () => {
+    const hoje = new Date()
+    const dataPublicacao = new Date(edital.dataPublicacao)
+    const dataEncerramento = edital.dataEncerramento ? new Date(edital.dataEncerramento) : null
 
-  const inscricoesAbertas = dataInicio && dataFim && hoje >= dataInicio && hoje <= dataFim
+    if (dataPublicacao > hoje) {
+      return { label: "Em breve", variant: "warning" }
+    } else if (dataEncerramento && dataEncerramento <= hoje) {
+      return { label: "Encerrado", variant: "secondary" }
+    } else {
+      return { label: "Aberto", variant: "default" }
+    }
+  }
+
+  const status = getStatus()
+
+  // Formatar data
+  const formatarData = (data: Date) => {
+    return new Date(data).toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    })
+  }
 
   return (
-    <Card className="h-full overflow-hidden transition-all hover:shadow-md">
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow">
       <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <CardTitle className="line-clamp-2 text-lg">{edital.titulo}</CardTitle>
-          {inscricoesAbertas ? (
-            <Badge>Inscrições Abertas</Badge>
-          ) : (
-            <Badge variant="secondary">
-              {dataInicio && hoje < dataInicio ? "Em Breve" : dataFim && hoje > dataFim ? "Encerrado" : "Indisponível"}
-            </Badge>
-          )}
+        <div className="flex justify-between items-start">
+          <Badge variant={status.variant as "default" | "secondary" | "destructive" | "outline" | "warning"}>
+            {status.label}
+          </Badge>
         </div>
+        <CardTitle className="line-clamp-2 mt-1">{edital.titulo}</CardTitle>
       </CardHeader>
-      <CardContent className="pb-2">
-        <p className="line-clamp-3 text-sm text-muted-foreground">
-          {edital.secoes?.[0]?.topicos?.[0]?.texto?.substring(0, 150) || "Sem descrição disponível"}
-          {edital.secoes?.[0]?.topicos?.[0]?.texto?.length > 150 ? "..." : ""}
-        </p>
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground">
-        <div className="flex flex-col w-full">
-          <div className="flex justify-between">
-            <span>Publicado em:</span>
-            <span>{new Date(edital.dataPublicacao).toLocaleDateString("pt-BR")}</span>
+      <CardContent className="flex-grow">
+        <div className="grid grid-cols-1 gap-2 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>Publicado em: {formatarData(edital.dataPublicacao)}</span>
           </div>
-          {edital.formulario?.dataFim && (
-            <div className="flex justify-between mt-1">
-              <span>Inscrições até:</span>
-              <span>{new Date(edital.formulario.dataFim).toLocaleDateString("pt-BR")}</span>
+
+          {edital.dataEncerramento && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Clock className="h-4 w-4" />
+              <span>Encerra em: {formatarData(edital.dataEncerramento)}</span>
+            </div>
+          )}
+
+          {edital.formulario?.dataInicio && edital.formulario?.dataFim && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>
+                Inscrições: {formatarData(edital.formulario.dataInicio)} a {formatarData(edital.formulario.dataFim)}
+              </span>
             </div>
           )}
         </div>
+      </CardContent>
+      <CardFooter>
+        <Button variant="outline" className="w-full">
+          Ver Detalhes
+        </Button>
       </CardFooter>
     </Card>
   )

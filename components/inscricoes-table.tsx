@@ -36,7 +36,7 @@ export function InscricoesTable({ inscricoes }: InscricoesTableProps) {
                 })}
               </TableCell>
               <TableCell>
-                <Link href={`/admin/inscricoes/${inscricao.id}`} className="text-blue-600 hover:underline">
+                <Link href={`/inscricoes/${inscricao.id}`} className="text-blue-600 hover:underline">
                   Ver Detalhes
                 </Link>
               </TableCell>

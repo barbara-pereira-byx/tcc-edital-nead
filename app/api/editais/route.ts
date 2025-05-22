@@ -5,17 +5,32 @@ import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions);
 
     if (!session || session.user.tipo !== 1) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
     }
 
-    const body = await req.json()
-    const { titulo, dataPublicacao, dataEncerramento, secoes } = body
+    const formData = await req.formData();
+    const titulo = formData.get('titulo') as string;
+    const senha = formData.get('senha') as string;
+    const dataPublicacao = formData.get('dataPublicacao') as string;
+    const dataEncerramento = formData.get('dataEncerramento') as string;
 
-    if (!titulo || !dataPublicacao || !secoes || secoes.length === 0) {
-      return NextResponse.json({ message: "Dados incompletos" }, { status: 400 })
+    if (!titulo || !dataPublicacao || !senha) {
+      return NextResponse.json({ message: "Dados incompletos" }, { status: 400 });
+    }
+
+    // Extrair arquivos do formData
+    const arquivos: { url: string; rotulo: string }[] = [];
+    const fileCount = formData.getAll('arquivos');
+    const labels = formData.getAll('labels');
+
+    for (let i = 0; i < fileCount.length; i++) {
+      arquivos.push({
+        url: fileCount[i] as string,
+        rotulo: labels[i] as string,
+      });
     }
 
     // Criar o edital
@@ -24,32 +39,20 @@ export async function POST(req: Request) {
         titulo,
         dataPublicacao: new Date(dataPublicacao),
         dataEncerramento: dataEncerramento ? new Date(dataEncerramento) : null,
-      },
-    })
-
-    // Criar as seções e tópicos
-    for (const secao of secoes) {
-      const secaoCriada = await prisma.secaoEdital.create({
-        data: {
-          titulo: secao.titulo,
-          editalId: edital.id,
+        senha,
+        arquivos: { // Use a notação correta para criar arquivos relacionados
+          create: arquivos.map((file) => ({
+            url: file.url,
+            rotulo: file.rotulo,
+          })),
         },
-      })
+      },
+    });
 
-      for (const topico of secao.topicos) {
-        await prisma.topicoEdital.create({
-          data: {
-            texto: topico.texto,
-            secaoEditalId: secaoCriada.id,
-          },
-        })
-      }
-    }
-
-    return NextResponse.json({ id: edital.id }, { status: 201 })
+    return NextResponse.json({ id: edital.id }, { status: 201 });
   } catch (error) {
-    console.error("Erro ao criar edital:", error)
-    return NextResponse.json({ message: "Erro ao criar edital" }, { status: 500 })
+    console.error("Erro ao criar edital:", error);
+    return NextResponse.json({ message: "Erro ao criar edital" }, { status: 500 });
   }
 }
 

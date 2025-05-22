@@ -1,109 +1,153 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
-import { PlusCircle, Trash2, MoveUp, MoveDown, FileText } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
+import { FileUploadArea } from "@/components/file-upload-area"
 
 interface EditalFormProps {
-  onEditalCreated: (id: string, codigo: string) => void
+  onEditalCreated: (id: string) => void
+}
+
+interface FileUpload {
+  file: File | null
+  label: string
+  progress?: number
+  status?: "idle" | "uploading" | "success" | "error"
+  url?: string
 }
 
 export function EditalForm({ onEditalCreated }: EditalFormProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [titulo, setTitulo] = useState("")
-  const [codigo, setCodigo] = useState("")
-  const [dataPublicacao, setDataPublicacao] = useState<Date | undefined>(new Date())
+  const [dataCriacao, setDataCriacao] = useState<Date | undefined>(undefined)
+  const [dataPublicacao, setDataPublicacao] = useState<Date | undefined>(undefined)
   const [dataEncerramento, setDataEncerramento] = useState<Date | undefined>(undefined)
-  const [secoes, setSecoes] = useState([
-    {
-      id: "temp-1",
-      titulo: "",
-      topicos: [{ id: "temp-1-1", texto: "" }],
-    },
-  ])
-  const [arquivo, setArquivo] = useState<File | null>(null)
+  const [senha, setSenha] = useState("")
+  const [arquivos, setArquivos] = useState<FileUpload[]>([])
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
 
-  const adicionarSecao = () => {
-    setSecoes([
-      ...secoes,
-      {
-        id: `temp-${secoes.length + 1}`,
-        titulo: "",
-        topicos: [{ id: `temp-${secoes.length + 1}-1`, texto: "" }],
-      },
-    ])
-  }
+  useEffect(() => {
+    const hoje = new Date()
+    setDataCriacao(hoje)
+  }, [])
 
-  const removerSecao = (index: number) => {
-    const novasSecoes = [...secoes]
-    novasSecoes.splice(index, 1)
-    setSecoes(novasSecoes)
-  }
+  const generateRandomPassword = () => {
+    const length = 20
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()"
+    let password = ""
 
-  const adicionarTopico = (secaoIndex: number) => {
-    const novasSecoes = [...secoes]
-    novasSecoes[secaoIndex].topicos.push({
-      id: `temp-${secaoIndex + 1}-${novasSecoes[secaoIndex].topicos.length + 1}`,
-      texto: "",
-    })
-    setSecoes(novasSecoes)
-  }
-
-  const removerTopico = (secaoIndex: number, topicoIndex: number) => {
-    const novasSecoes = [...secoes]
-    novasSecoes[secaoIndex].topicos.splice(topicoIndex, 1)
-    setSecoes(novasSecoes)
-  }
-
-  const moverSecaoParaCima = (index: number) => {
-    if (index === 0) return
-    const novasSecoes = [...secoes]
-    const temp = novasSecoes[index]
-    novasSecoes[index] = novasSecoes[index - 1]
-    novasSecoes[index - 1] = temp
-    setSecoes(novasSecoes)
-  }
-
-  const moverSecaoParaBaixo = (index: number) => {
-    if (index === secoes.length - 1) return
-    const novasSecoes = [...secoes]
-    const temp = novasSecoes[index]
-    novasSecoes[index] = novasSecoes[index + 1]
-    novasSecoes[index + 1] = temp
-    setSecoes(novasSecoes)
-  }
-
-  const moverTopicoParaCima = (secaoIndex: number, topicoIndex: number) => {
-    if (topicoIndex === 0) return
-    const novasSecoes = [...secoes]
-    const temp = novasSecoes[secaoIndex].topicos[topicoIndex]
-    novasSecoes[secaoIndex].topicos[topicoIndex] = novasSecoes[secaoIndex].topicos[topicoIndex - 1]
-    novasSecoes[secaoIndex].topicos[topicoIndex - 1] = temp
-    setSecoes(novasSecoes)
-  }
-
-  const moverTopicoParaBaixo = (secaoIndex: number, topicoIndex: number) => {
-    if (topicoIndex === secoes[secaoIndex].topicos.length - 1) return
-    const novasSecoes = [...secoes]
-    const temp = novasSecoes[secaoIndex].topicos[topicoIndex]
-    novasSecoes[secaoIndex].topicos[topicoIndex] = novasSecoes[secaoIndex].topicos[topicoIndex + 1]
-    novasSecoes[secaoIndex].topicos[topicoIndex + 1] = temp
-    setSecoes(novasSecoes)
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setArquivo(e.target.files[0])
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length)
+      password += charset[randomIndex]
     }
+
+    setSenha(password)
+  }
+
+  const uploadFile = async (file: File, label: string, index: number): Promise<string> => {
+    try {
+      // Atualizar status para uploading
+      const newArquivos = [...arquivos]
+      newArquivos[index] = {
+        ...newArquivos[index],
+        status: "uploading",
+        progress: 0,
+      }
+      setArquivos(newArquivos)
+
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("label", label)
+
+      // Simular progresso de upload
+      const progressInterval = setInterval(() => {
+        setArquivos((prev) => {
+          const updated = [...prev]
+          if (updated[index] && updated[index].progress !== undefined && updated[index].progress < 90) {
+            updated[index] = {
+              ...updated[index],
+              progress: (updated[index].progress || 0) + 10,
+            }
+          }
+          return updated
+        })
+      }, 300)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      clearInterval(progressInterval)
+
+      if (!response.ok) {
+        throw new Error("Erro ao fazer upload do arquivo")
+      }
+
+      const data = await response.json()
+
+      // Atualizar status para success
+      setArquivos((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          status: "success",
+          progress: 100,
+          url: data.url,
+        }
+        return updated
+      })
+
+      return data.url
+    } catch (error) {
+      // Atualizar status para error
+      setArquivos((prev) => {
+        const updated = [...prev]
+        updated[index] = {
+          ...updated[index],
+          status: "error",
+        }
+        return updated
+      })
+      throw error
+    }
+  }
+
+  const handleFileChange = (index: number, file: File) => {
+    const newArquivos = [...arquivos]
+    newArquivos[index] = {
+      ...newArquivos[index],
+      file,
+      status: "idle",
+    }
+    setArquivos(newArquivos)
+  }
+
+  const handleLabelChange = (index: number, label: string) => {
+    const newArquivos = [...arquivos]
+    newArquivos[index] = {
+      ...newArquivos[index],
+      label,
+    }
+    setArquivos(newArquivos)
+  }
+
+  const addFileUpload = () => {
+    setArquivos([...arquivos, { file: null, label: "", status: "idle" }])
+  }
+
+  const removeFileUpload = (index: number) => {
+    const newArquivos = [...arquivos]
+    newArquivos.splice(index, 1)
+    setArquivos(newArquivos)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,16 +164,6 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       return
     }
 
-    if (!codigo) {
-      toast({
-        title: "Erro ao criar edital",
-        description: "O código do edital é obrigatório",
-        variant: "destructive",
-      })
-      setIsLoading(false)
-      return
-    }
-
     if (!dataPublicacao) {
       toast({
         title: "Erro ao criar edital",
@@ -140,59 +174,86 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       return
     }
 
-    // Verificar se todas as seções têm título e pelo menos um tópico com texto
-    for (const secao of secoes) {
-      if (!secao.titulo) {
-        toast({
-          title: "Erro ao criar edital",
-          description: "Todas as seções devem ter um título",
-          variant: "destructive",
-        })
-        setIsLoading(false)
-        return
-      }
+    if (dataEncerramento && dataEncerramento < dataPublicacao) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "A data de encerramento não pode ser anterior à data de publicação",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
 
-      if (secao.topicos.length === 0) {
-        toast({
-          title: "Erro ao criar edital",
-          description: `A seção "${secao.titulo}" deve ter pelo menos um tópico`,
-          variant: "destructive",
-        })
-        setIsLoading(false)
-        return
-      }
+    if (dataCriacao && dataPublicacao < dataCriacao) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "A data de publicação não pode ser anterior à data de criação",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
 
-      for (const topico of secao.topicos) {
-        if (!topico.texto) {
-          toast({
-            title: "Erro ao criar edital",
-            description: `Todos os tópicos da seção "${secao.titulo}" devem ter conteúdo`,
-            variant: "destructive",
-          })
-          setIsLoading(false)
-          return
-        }
-      }
+    if (!dataCriacao) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "A data de criação é obrigatória",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
     }
 
     try {
+      const formData = new FormData()
+      const fileUrls: { url: string; rotulo: string }[] = []
+
+      // Upload dos arquivos
+      for (let i = 0; i < arquivos.length; i++) {
+        const { file, label } = arquivos[i]
+        if (file) {
+          try {
+            const url = await uploadFile(file, label, i)
+            fileUrls.push({ url, rotulo: label })
+          } catch (error) {
+            console.error("Erro ao fazer upload do arquivo:", error)
+            toast({
+              title: "Erro ao fazer upload",
+              description: `Falha ao enviar o arquivo "${file.name}"`,
+              variant: "destructive",
+            })
+            setIsLoading(false)
+            return
+          }
+        }
+      }
+
+      // Adicionar dados ao FormData
+      formData.append("titulo", titulo)
+      formData.append("senha", senha)
+      formData.append("dataCriacao", dataCriacao?.toISOString() || "")
+      formData.append("dataPublicacao", dataPublicacao?.toISOString() || "")
+      if (dataEncerramento) {
+        formData.append("dataEncerramento", dataEncerramento?.toISOString())
+      }
+
+      fileUrls.forEach(({ url, rotulo }) => {
+        formData.append("arquivos", url)
+        formData.append("labels", rotulo)
+      })
+
       const response = await fetch("/api/editais", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          titulo,
-          codigo,
-          dataPublicacao,
-          dataEncerramento,
-          secoes,
-        }),
+        body: formData,
       })
 
       if (response.ok) {
         const data = await response.json()
-        onEditalCreated(data.id, codigo)
+        onEditalCreated(data.id)
+        toast({
+          title: "Sucesso!",
+          description: "Edital criado com sucesso.",
+        })
       } else {
         const error = await response.json()
         toast({
@@ -217,35 +278,7 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       <Card className="border-dashed border-2">
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-md">
-              <FileText className="h-16 w-16 text-gray-400 mb-2" />
-              <div className="text-center">
-                <label htmlFor="file-upload" className="cursor-pointer text-red-600 hover:text-red-700">
-                  {arquivo ? arquivo.name : "Clique para fazer upload"}
-                </label>
-                <input
-                  id="file-upload"
-                  type="file"
-                  accept=".pdf,.doc,.docx"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <p className="text-xs text-gray-500 mt-1">PDF, DOC ou DOCX (máx. 5MB)</p>
-              </div>
-            </div>
-
             <div className="md:col-span-2 space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="codigo">Código do Edital</Label>
-                <Input
-                  id="codigo"
-                  value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
-                  placeholder="Ex: BLS-001-2025-ADMP"
-                  required
-                />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Edital</Label>
                 <Input
@@ -257,7 +290,11 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label>Data de Criação</Label>
+                  <DatePicker date={dataCriacao} setDate={() => {}} disabled={true} />
+                </div>
                 <div className="space-y-2">
                   <Label>Data de Publicação</Label>
                   <DatePicker date={dataPublicacao} setDate={setDataPublicacao} />
@@ -266,143 +303,43 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
                   <Label>Data de Encerramento (opcional)</Label>
                   <DatePicker date={dataEncerramento} setDate={setDataEncerramento} />
                 </div>
+                <div className="space-y-2">
+                  <Label>Senha do Edital</Label>
+                  <div className="flex items-center">
+                    <Input
+                      type={isPasswordVisible ? "text" : "password"}
+                      placeholder="Digite a senha do edital"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      required
+                    />
+                    <Button type="button" onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="ml-2">
+                      {isPasswordVisible ? <EyeOff /> : <Eye />}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={generateRandomPassword}
+                      className="ml-2 bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      Gerar Senha
+                    </Button>
+                  </div>
+                </div>
               </div>
+            </div>
+
+            <div className="md:col-span-1">
+              <FileUploadArea
+                files={arquivos}
+                onAddFile={addFileUpload}
+                onRemoveFile={removeFileUpload}
+                onFileChange={handleFileChange}
+                onLabelChange={handleLabelChange}
+              />
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Seções do Edital</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={adicionarSecao}
-            className="border-red-600 text-red-600 hover:bg-red-50"
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Seção
-          </Button>
-        </div>
-
-        {secoes.map((secao, secaoIndex) => (
-          <div key={secao.id} className="border rounded-md p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor={`secao-${secaoIndex}`}>Título da Seção</Label>
-                <Input
-                  id={`secao-${secaoIndex}`}
-                  value={secao.titulo}
-                  onChange={(e) => {
-                    const novasSecoes = [...secoes]
-                    novasSecoes[secaoIndex].titulo = e.target.value
-                    setSecoes(novasSecoes)
-                  }}
-                  placeholder="Ex: Requisitos"
-                  required
-                />
-              </div>
-              <div className="flex items-center ml-2 space-x-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => moverSecaoParaCima(secaoIndex)}
-                  disabled={secaoIndex === 0}
-                >
-                  <MoveUp className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => moverSecaoParaBaixo(secaoIndex)}
-                  disabled={secaoIndex === secoes.length - 1}
-                >
-                  <MoveDown className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removerSecao(secaoIndex)}
-                  disabled={secoes.length === 1}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Tópicos</h4>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => adicionarTopico(secaoIndex)}
-                  className="border-red-600 text-red-600 hover:bg-red-50"
-                >
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Adicionar Tópico
-                </Button>
-              </div>
-
-              {secao.topicos.map((topico, topicoIndex) => (
-                <div key={topico.id} className="border rounded-md p-3 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 space-y-2">
-                      <Label htmlFor={`topico-${secaoIndex}-${topicoIndex}`}>Conteúdo do Tópico</Label>
-                      <Textarea
-                        id={`topico-${secaoIndex}-${topicoIndex}`}
-                        value={topico.texto}
-                        onChange={(e) => {
-                          const novasSecoes = [...secoes]
-                          novasSecoes[secaoIndex].topicos[topicoIndex].texto = e.target.value
-                          setSecoes(novasSecoes)
-                        }}
-                        placeholder="Digite o conteúdo do tópico..."
-                        required
-                      />
-                    </div>
-                    <div className="flex items-center ml-2 space-x-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => moverTopicoParaCima(secaoIndex, topicoIndex)}
-                        disabled={topicoIndex === 0}
-                      >
-                        <MoveUp className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => moverTopicoParaBaixo(secaoIndex, topicoIndex)}
-                        disabled={topicoIndex === secao.topicos.length - 1}
-                      >
-                        <MoveDown className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removerTopico(secaoIndex, topicoIndex)}
-                        disabled={secao.topicos.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading} className="bg-red-600 hover:bg-red-700">

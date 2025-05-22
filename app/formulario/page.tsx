@@ -34,9 +34,9 @@ export default async function NovoFormularioPage({
               editalId={editalId}
               onFormularioCreated={(formularioId) => {
                 if (editalId) {
-                  redirect(`/admin/editais/${editalId}?tab=formulario`)
+                  redirect(`/editais/${editalId}?tab=formulario`)
                 } else {
-                  redirect("/admin/formularios")
+                  redirect("/formularios")
                 }
               }}
             />

@@ -11,6 +11,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { FileText, AlertCircle, Loader2 } from "lucide-react"
 
 interface FormularioInscricaoProps {
   formulario: any
@@ -21,9 +23,54 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [formValues, setFormValues] = useState<Record<string, any>>({})
+  const [fileErrors, setFileErrors] = useState<Record<string, string>>({})
+
+  const validateFile = (file: File, campoId: string): boolean => {
+    // Verificar extensão do arquivo
+    const extensao = file.name.split(".").pop()?.toLowerCase()
+    const extensoesPermitidas = ["pdf", "doc", "docx"]
+
+    if (!extensao || !extensoesPermitidas.includes(extensao)) {
+      setFileErrors((prev) => ({
+        ...prev,
+        [campoId]: `Formato de arquivo não permitido. Apenas PDF, DOC ou DOCX são aceitos.`,
+      }))
+      return false
+    }
+
+    // Verificar tamanho do arquivo (máximo 5MB)
+    const tamanhoMaximo = 5 * 1024 * 1024 // 5MB em bytes
+    if (file.size > tamanhoMaximo) {
+      setFileErrors((prev) => ({
+        ...prev,
+        [campoId]: `O arquivo é muito grande. O tamanho máximo permitido é 5MB.`,
+      }))
+      return false
+    }
+
+    // Limpar erro se existir
+    if (fileErrors[campoId]) {
+      setFileErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[campoId]
+        return newErrors
+      })
+    }
+
+    return true
+  }
 
   const handleChange = (id: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [id]: value }))
+
+    // Limpar erro de arquivo se um novo arquivo for selecionado
+    if (fileErrors[id]) {
+      setFileErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[id]
+        return newErrors
+      })
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +79,13 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
 
     // Verificar campos obrigatórios
     const camposObrigatorios = formulario.campos.filter((campo: any) => campo.obrigatorio === 1)
-    const camposVazios = camposObrigatorios.filter((campo: any) => !formValues[campo.id])
+    const camposVazios = camposObrigatorios.filter((campo: any) => {
+      // Para campos de arquivo, verificar se há um arquivo selecionado
+      if (campo.tipo === 6) {
+        return !formValues[campo.id] || fileErrors[campo.id]
+      }
+      return !formValues[campo.id]
+    })
 
     if (camposVazios.length > 0) {
       toast({
@@ -44,23 +97,33 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
       return
     }
 
+    // Verificar se há erros de arquivo
+    if (Object.keys(fileErrors).length > 0) {
+      toast({
+        title: "Erros nos arquivos",
+        description: "Corrija os erros nos arquivos antes de enviar",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     try {
       const formData = new FormData()
+      formData.append("formularioId", formulario.id)
 
       // Adicionar os campos ao FormData
       Object.entries(formValues).forEach(([campoId, valor]) => {
         if (valor instanceof File) {
           formData.append(campoId, valor) // Adiciona o arquivo
-        } else {
-          formData.append(campoId, valor) // Adiciona valores normais
+        } else if (valor !== null && valor !== undefined) {
+          formData.append(campoId, valor.toString()) // Adiciona valores normais
         }
       })
 
-      formData.append("formularioId", formulario.id)
-
       const response = await fetch("/api/inscricoes", {
         method: "POST",
-        body: formData,
+        body: formData, // Enviar como FormData, não como JSON
       })
 
       if (response.ok) {
@@ -78,6 +141,7 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
         })
       }
     } catch (error) {
+      console.error("Erro ao enviar inscrição:", error)
       toast({
         title: "Erro ao realizar inscrição",
         description: "Ocorreu um erro ao tentar realizar a inscrição",
@@ -159,22 +223,41 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
         )
       case 6: // Arquivo
         return (
-          <div>
-            <Input
-              type="file"
-              id={campo.id}
-              accept=".pdf,.doc,.docx"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  handleChange(campo.id, file) // Armazena o arquivo no estado
-                }
-              }}
-              required={campo.obrigatorio === 1}
-            />
-            <p className="text-sm text-muted-foreground italic">
-              Apenas arquivos nos formatos PDF, DOC ou DOCX são permitidos.
-            </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Input
+                type="file"
+                id={campo.id}
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file) {
+                    if (validateFile(file, campo.id)) {
+                      handleChange(campo.id, file) // Armazena o arquivo no estado
+                    }
+                  }
+                }}
+                required={campo.obrigatorio === 1}
+                className={fileErrors[campo.id] ? "border-red-500" : ""}
+              />
+              {formValues[campo.id] && !fileErrors[campo.id] && (
+                <div className="flex items-center text-green-600 text-sm">
+                  <FileText className="h-4 w-4 mr-1" />
+                  <span className="truncate max-w-[200px]">{formValues[campo.id].name}</span>
+                </div>
+              )}
+            </div>
+
+            {fileErrors[campo.id] ? (
+              <Alert variant="destructive" className="py-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{fileErrors[campo.id]}</AlertDescription>
+              </Alert>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                Apenas arquivos nos formatos PDF, DOC ou DOCX são permitidos. Tamanho máximo: 5MB.
+              </p>
+            )}
           </div>
         )
       default:
@@ -202,7 +285,13 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
       ))}
       <div className="flex justify-end">
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Enviando..." : "Enviar Inscrição"}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...
+            </>
+          ) : (
+            "Enviar Inscrição"
+          )}
         </Button>
       </div>
     </form>

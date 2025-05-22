@@ -11,11 +11,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { formularioId, campos } = body
+    // Verificar se a requisição é multipart/form-data
+    const contentType = req.headers.get("content-type") || ""
 
-    if (!formularioId || !campos || campos.length === 0) {
-      return NextResponse.json({ message: "Dados incompletos" }, { status: 400 })
+    if (!contentType.includes("multipart/form-data")) {
+      return NextResponse.json({ message: "Formato de requisição inválido" }, { status: 400 })
+    }
+
+    // Processar FormData
+    const formData = await req.formData()
+    const formularioId = formData.get("formularioId") as string
+
+    if (!formularioId) {
+      return NextResponse.json({ message: "ID do formulário não fornecido" }, { status: 400 })
     }
 
     // Verificar se o formulário existe
@@ -42,17 +50,20 @@ export async function POST(req: Request) {
 
     // Verificar se o período de inscrições está aberto
     const hoje = new Date()
-    if (hoje < formulario.dataInicio || hoje > formulario.dataFim) {
+    const dataInicio = new Date(formulario.dataInicio)
+    const dataFim = new Date(formulario.dataFim)
+    dataFim.setHours(23, 59, 59, 999) // Ajustar para o final do dia
+
+    if (hoje < dataInicio || hoje > dataFim) {
       return NextResponse.json({ message: "O período de inscrições não está aberto" }, { status: 400 })
     }
 
     // Verificar campos obrigatórios
     const camposObrigatorios = formulario.campos.filter((campo) => campo.obrigatorio === 1)
-    const camposPreenchidos = campos.map((campo:any) => campo.campoId)
 
     for (const campo of camposObrigatorios) {
-      if (!camposPreenchidos.includes(campo.id)) {
-        return NextResponse.json({ message: `O campo "${campo.rotulo}" é obrigatório` }, { status: 400 })
+      if (!formData.has(campo.id)) {
+        return NextResponse.json({ message: `O campo "${campo.rotulo.split("|")[0]}" é obrigatório` }, { status: 400 })
       }
     }
 
@@ -64,15 +75,69 @@ export async function POST(req: Request) {
       },
     })
 
-    // Salvar as respostas dos campos
-    for (const campo of campos) {
-      await prisma.formularioUsuarioCampo.create({
-        data: {
-          valor: campo.valor,
-          campoFormularioId: campo.campoId,
-          formularioUsuarioId: inscricao.id,
-        },
-      })
+    // Processar os campos e arquivos
+    const camposPromises = []
+    const arquivosPromises = []
+
+    // Processar cada campo do formulário
+    for (const campo of formulario.campos) {
+      const value = formData.get(campo.id)
+
+      if (value === null) continue
+
+      // Verificar se é um campo de arquivo
+      if (campo.tipo === 6 && value instanceof File) {
+        const file = value as File
+
+        try {
+          // Importar dinamicamente o módulo fileStorage
+          const { saveFile } = await import("@/lib/fileStorage")
+
+          // Salvar o arquivo
+          const fileInfo = await saveFile(file, session.user.id, inscricao.id)
+
+          // Criar o registro do campo com o valor sendo o nome original do arquivo
+          const campoPromise = prisma.formularioUsuarioCampo.create({
+            data: {
+              valor: file.name, // Nome original do arquivo
+              campoFormularioId: campo.id,
+              formularioUsuarioId: inscricao.id,
+            },
+          })
+
+          // Aguardar a criação do campo para obter o ID
+          const campoResult = await campoPromise
+
+          // Criar o registro do arquivo associado ao campo
+          const arquivoPromise = prisma.arquivoUsuario.create({
+            data: {
+              nomeOriginal: fileInfo.nomeOriginal,
+              nomeArmazenado: fileInfo.nomeArmazenado,
+              tamanho: fileInfo.tamanho,
+              tipo: fileInfo.tipo,
+              caminho: fileInfo.caminho,
+              campoId: campoResult.id, // Associar ao campo
+              inscricaoId: inscricao.id,
+            },
+          })
+
+          await arquivoPromise
+        } catch (error) {
+          console.error("Erro ao processar arquivo:", error)
+          // Continuar com os outros campos mesmo se houver erro no arquivo
+        }
+      } else {
+        // Campo normal (não arquivo)
+        const campoPromise = prisma.formularioUsuarioCampo.create({
+          data: {
+            valor: value.toString(),
+            campoFormularioId: campo.id,
+            formularioUsuarioId: inscricao.id,
+          },
+        })
+
+        await campoPromise
+      }
     }
 
     return NextResponse.json({ id: inscricao.id }, { status: 201 })

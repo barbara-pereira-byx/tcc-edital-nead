@@ -20,7 +20,7 @@ export const columns = [
       const edital = row.original
       return (
         <div className="max-w-[500px] truncate font-medium">
-          <Link href={`/admin/editais/${edital.id}`} className="hover:underline">
+          <Link href={`/editais/${edital.id}`} className="hover:underline">
             {edital.titulo}
           </Link>
         </div>
@@ -97,7 +97,7 @@ export const columns = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem asChild>
-              <Link href={`/admin/editais/${edital.id}`}>Editar</Link>
+              <Link href={`/editais/${edital.id}`}>Editar</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

@@ -2,24 +2,38 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
+import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { status } = useSession()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     cpf: "",
     senha: "",
   })
+
+  // Resetar o estado de carregamento quando o componente é montado
+  useEffect(() => {
+    setIsLoading(false)
+  }, [])
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/editais")
+    }
+  }, [status, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -45,17 +59,13 @@ export default function LoginPage() {
         })
         setIsLoading(false)
       } else {
-        // Fetch user data to determine role
-        const userResponse = await fetch("/api/auth/session")
-        const session = await userResponse.json()
+        // Login bem-sucedido
+        toast({
+          title: "Login realizado",
+          description: "Você foi autenticado com sucesso",
+        })
 
-        if (session?.user?.tipo === 1) {
-          // Admin user
-          router.push("/admin/editais")
-        } else {
-          // Regular user
-          router.push("/editais")
-        }
+        // Redirecionamento será feito pelo useEffect quando o status mudar para "authenticated"
       }
     } catch (error) {
       toast({
@@ -98,7 +108,13 @@ export default function LoginPage() {
               <Input id="senha" name="senha" type="password" value={formData.senha} onChange={handleChange} required />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Entrando..." : "Entrar"}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Entrando...
+                </>
+              ) : (
+                "Entrar"
+              )}
             </Button>
           </form>
 
@@ -115,14 +131,6 @@ export default function LoginPage() {
                 Clique aqui
               </Link>
             </p>
-            <div className="text-center text-sm">
-              <p>
-                Não tem login?{" "}
-                <Link href="/cadastro" className="text-blue-600 hover:underline">
-                  Cadastre-se
-                </Link>
-              </p>
-            </div>
           </div>
         </div>
       </div>

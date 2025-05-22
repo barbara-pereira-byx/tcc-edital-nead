@@ -123,13 +123,13 @@ export function EditaisTable({ editais }: { editais: Edital[] }) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/admin/editais/${edital.id}`}>
+                        <Link href={`/editais/${edital.id}`}>
                           <Eye className="mr-2 h-4 w-4" />
                           <span>Visualizar</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link href={`/admin/editais/${edital.id}/editar`}>
+                        <Link href={`/editais/${edital.id}/editar`}>
                           <Pencil className="mr-2 h-4 w-4" />
                           <span>Editar</span>
                         </Link>

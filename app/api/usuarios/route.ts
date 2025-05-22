@@ -1,31 +1,39 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
+import { hash } from "bcryptjs"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { hash } from "bcryptjs"
 
+// Rota para criar um novo usuário
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { nome, email, cpf, senha, tipo = 0 } = body
+    const session = await getServerSession(authOptions)
 
-    if (!nome || !email || !cpf || !senha) {
-      return NextResponse.json({ message: "Dados incompletos" }, { status: 400 })
+    // Verificar se o usuário está autenticado e é administrador
+    if (!session || session.user.tipo !== 1) {
+      return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
 
-    // Verificar se o e-mail já está em uso
-    const usuarioExistente = await prisma.usuario.findFirst({
+    const { nome, email, cpf, telefone, tipo, senha } = await req.json()
+
+    // Validar campos obrigatórios
+    if (!nome || !email || !cpf || !senha || tipo === undefined) {
+      return NextResponse.json({ message: "Todos os campos obrigatórios devem ser preenchidos" }, { status: 400 })
+    }
+
+    // Verificar se já existe um usuário com o mesmo CPF ou email
+    const existingUser = await prisma.usuario.findFirst({
       where: {
-        OR: [{ email }, { cpf }],
+        OR: [{ cpf }, { email }],
       },
     })
 
-    if (usuarioExistente) {
-      return NextResponse.json({ message: "E-mail ou CPF já cadastrado" }, { status: 400 })
+    if (existingUser) {
+      return NextResponse.json({ message: "Já existe um usuário com este CPF ou email" }, { status: 400 })
     }
 
-    // Hash da senha
-    const senhaHash = await hash(senha, 10)
+    // Criar o hash da senha
+    const hashedPassword = await hash(senha, 10)
 
     // Criar o usuário
     const usuario = await prisma.usuario.create({
@@ -33,79 +41,48 @@ export async function POST(req: Request) {
         nome,
         email,
         cpf,
-        senha: senhaHash,
         tipo,
+        senha: hashedPassword,
       },
     })
 
-    return NextResponse.json({ id: usuario.id, nome: usuario.nome, email: usuario.email }, { status: 201 })
+    // Remover a senha do objeto retornado
+    const { senha: _, ...usuarioSemSenha } = usuario
+
+    return NextResponse.json(usuarioSemSenha, { status: 201 })
   } catch (error) {
     console.error("Erro ao criar usuário:", error)
     return NextResponse.json({ message: "Erro ao criar usuário" }, { status: 500 })
   }
 }
 
+// Rota para listar todos os usuários
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions)
 
+    // Verificar se o usuário está autenticado e é administrador
     if (!session || session.user.tipo !== 1) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
 
-    const { searchParams } = new URL(req.url)
-    const search = searchParams.get("search") || ""
-    const page = Number.parseInt(searchParams.get("page") || "1")
-    const perPage = Number.parseInt(searchParams.get("perPage") || "10")
-    const tipo = searchParams.get("tipo")
-
-    const where: any = {}
-
-    if (search) {
-      where.OR = [
-        { nome: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-        { cpf: { contains: search } },
-      ]
-    }
-
-    if (tipo) {
-      where.tipo = Number.parseInt(tipo)
-    }
-
     const usuarios = await prisma.usuario.findMany({
-      where,
       select: {
         id: true,
         nome: true,
         email: true,
         cpf: true,
+        telefone: true,
         tipo: true,
-        createdAt: true,
-        _count: {
-          select: {
-            formularios: true,
-          },
-        },
       },
-      orderBy: { nome: "asc" },
-      skip: (page - 1) * perPage,
-      take: perPage,
-    })
-
-    const total = await prisma.usuario.count({ where })
-
-    return NextResponse.json({
-      usuarios,
-      pagination: {
-        total,
-        page,
-        perPage,
-        totalPages: Math.ceil(total / perPage),
+      orderBy: {
+        nome: "asc",
       },
     })
+
+    return NextResponse.json(usuarios)
   } catch (error) {
-    console.error("Erro ao buscar usuários:", error)
-    return NextResponse.json({ message: "Erro ao buscar usuários" }, { status: 500 })
+    console.error("Erro ao listar usuários:", error)
+    return NextResponse.json({ message: "Erro ao listar usuários" }, { status: 500 })
   }
 }

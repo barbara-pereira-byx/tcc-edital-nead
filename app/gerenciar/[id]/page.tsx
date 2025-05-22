@@ -8,23 +8,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
 
 export default async function EditarEditalPage({ params }: { params: { id: string } }) {
+  // Corrigindo o erro de parâmetros dinâmicos
+  // Garantindo que params.id é uma string válida antes de usar
+  const id = params?.id || ""
+
   const session = await getServerSession(authOptions)
 
   if (!session || session.user.tipo !== 1) {
-    redirect("/ediatis")
+    redirect("/editais")
   }
 
   const edital = await prisma.edital.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
-      secoes: {
-        include: {
-          topicos: true,
-        },
-        orderBy: {
-          id: "asc",
-        },
-      },
+      arquivos: true,
       formulario: {
         include: {
           campos: {
@@ -38,7 +35,7 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
   })
 
   if (!edital) {
-    redirect("/admin/editais")
+    redirect("/gerenciar")
   }
 
   return (
@@ -46,7 +43,7 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
           <Link href="/gerenciar" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
-              ← Voltar para gerenciador de editais
+            ← Voltar para gerenciador de editais
           </Link>
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Editar Edital</h1>
@@ -59,6 +56,7 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
               <TabsTrigger value="formulario">Formulário de Inscrição</TabsTrigger>
             </TabsList>
             <TabsContent value="edital" className="bg-white rounded-lg shadow p-6">
+              {/* Removendo a prop onEditalUpdated que está causando o erro */}
               <EditalEditForm edital={edital} />
             </TabsContent>
             <TabsContent value="formulario" className="bg-white rounded-lg shadow p-6">
@@ -68,12 +66,12 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
                 <div className="text-center py-8">
                   <h3 className="text-lg font-medium mb-2">Nenhum formulário associado</h3>
                   <p className="text-muted-foreground mb-4">Este edital ainda não possui um formulário de inscrição.</p>
-                  <a 
-                    href={`/admin/editais/novo/pages`} 
+                  <Link
+                    href={`/gerenciar/formulario/novo/${edital.id}`}
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                   >
                     Criar Formulário
-                  </a>
+                  </Link>
                 </div>
               )}
             </TabsContent>

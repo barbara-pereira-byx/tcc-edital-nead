@@ -35,7 +35,7 @@ export const columns = [
       return (
         <div className="max-w-[500px] truncate font-medium">
           {edital && edital.id ? (
-            <Link href={`/admin/editais/${edital.id}`} className="hover:underline">
+            <Link href={`/editais/${edital.id}`} className="hover:underline">
               {edital.titulo}
             </Link>
           ) : (
@@ -150,7 +150,7 @@ export const columns = [
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Ações</DropdownMenuLabel>
               <DropdownMenuItem asChild>
-                <Link href={`/admin/editais/${edital.id}`}>
+                <Link href={`/editais/${edital.id}`}>
                   <FileEdit className="mr-2 h-4 w-4" />
                   Editar
                 </Link>

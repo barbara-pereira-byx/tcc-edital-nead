@@ -1,807 +1,243 @@
-// Dados de exemplo para simulação
-// Em um cenário real, esses dados viriam de um banco de dados
-
-// Interfaces
-export interface Edital {
-  id: string
-  titulo: string
-  descricao?: string | null
-  dataPublicacao: Date
-  dataEncerramento?: Date | null
-  senha?: string | null
-  dataCriacao: Date
-  formulario?: {
-    id: string
-    dataInicio?: Date | null
-    dataFim?: Date | null
-    campos?: any[]
-  } | null
-}
-
-// Editais
-const editaisData: Edital[] = [
+// Dados estáticos para os editais
+const editaisData = [
   {
     id: "1",
-    titulo: "Processo Seletivo para Bolsas de Iniciação Científica",
+    titulo: "Programa de Bolsas de Iniciação Científica",
     descricao:
-      "Edital para seleção de estudantes de graduação para participação em projetos de pesquisa com bolsa de iniciação científica. Os candidatos selecionados receberão bolsa mensal e certificado de participação ao final do projeto.",
-    dataPublicacao: new Date("2025-05-01"),
-    dataEncerramento: new Date("2025-06-15"),
-    dataCriacao: new Date("2025-04-15"),
-    formulario: {
-      id: "1",
-      dataInicio: new Date("2025-05-01"),
-      dataFim: new Date("2025-06-15"),
-      campos: [
-        {
-          id: "nome",
-          tipo: "texto_curto",
-          label: "Nome Completo",
-          placeholder: "Digite seu nome completo",
-          obrigatorio: true,
-        },
-        {
-          id: "email",
-          tipo: "texto_curto",
-          label: "E-mail",
-          placeholder: "Digite seu e-mail",
-          obrigatorio: true,
-        },
-        {
-          id: "telefone",
-          tipo: "texto_curto",
-          label: "Telefone",
-          placeholder: "(00) 00000-0000",
-          obrigatorio: true,
-        },
-        {
-          id: "matricula",
-          tipo: "texto_curto",
-          label: "Número de Matrícula",
-          placeholder: "Digite seu número de matrícula",
-          obrigatorio: true,
-        },
-        {
-          id: "curso",
-          tipo: "selecao",
-          label: "Curso",
-          placeholder: "Selecione seu curso",
-          obrigatorio: true,
-          opcoes: [
-            "Ciência da Computação",
-            "Engenharia de Software",
-            "Sistemas de Informação",
-            "Engenharia Civil",
-            "Medicina",
-            "Direito",
-            "Outro",
-          ],
-        },
-        {
-          id: "periodo",
-          tipo: "selecao",
-          label: "Período Atual",
-          placeholder: "Selecione seu período atual",
-          obrigatorio: true,
-          opcoes: ["1º", "2º", "3º", "4º", "5º", "6º", "7º", "8º", "9º", "10º"],
-        },
-        {
-          id: "area_interesse",
-          tipo: "selecao",
-          label: "Área de Interesse",
-          placeholder: "Selecione a área de interesse",
-          obrigatorio: true,
-          opcoes: [
-            "Inteligência Artificial",
-            "Banco de Dados",
-            "Redes de Computadores",
-            "Engenharia de Software",
-            "Computação Gráfica",
-            "Segurança da Informação",
-          ],
-        },
-        {
-          id: "experiencia",
-          tipo: "texto_longo",
-          label: "Experiência Prévia",
-          placeholder: "Descreva sua experiência prévia em pesquisa ou na área de interesse",
-          obrigatorio: false,
-        },
-        {
-          id: "motivacao",
-          tipo: "texto_longo",
-          label: "Carta de Motivação",
-          placeholder: "Explique sua motivação para participar do programa de iniciação científica",
-          obrigatorio: true,
-        },
-        {
-          id: "disponibilidade",
-          tipo: "checkbox",
-          label: "Declaro ter disponibilidade de 20 horas semanais para dedicação ao projeto",
-          obrigatorio: true,
-        },
-      ],
-    },
+      "O Programa de Bolsas de Iniciação Científica (PIBIC) tem como objetivo despertar vocação científica e incentivar novos talentos potenciais entre estudantes de graduação.",
+    dataEncerramento: "2024-12-31",
   },
   {
     id: "2",
-    titulo: "Seleção para Programa de Pós-Graduação em Ciência da Computação",
+    titulo: "Auxílio Financeiro para Participação em Eventos Científicos",
     descricao:
-      "Edital para seleção de candidatos para o Programa de Pós-Graduação em Ciência da Computação, níveis Mestrado e Doutorado, com início no segundo semestre de 2025.",
-    dataPublicacao: new Date("2025-04-10"),
-    dataEncerramento: new Date("2025-05-30"),
-    dataCriacao: new Date("2025-03-20"),
-    formulario: {
-      id: "2",
-      dataInicio: new Date("2025-04-10"),
-      dataFim: new Date("2025-05-30"),
-      campos: [
-        {
-          id: "nome",
-          tipo: "texto_curto",
-          label: "Nome Completo",
-          placeholder: "Digite seu nome completo",
-          obrigatorio: true,
-        },
-        {
-          id: "email",
-          tipo: "texto_curto",
-          label: "E-mail",
-          placeholder: "Digite seu e-mail",
-          obrigatorio: true,
-        },
-        {
-          id: "telefone",
-          tipo: "texto_curto",
-          label: "Telefone",
-          placeholder: "(00) 00000-0000",
-          obrigatorio: true,
-        },
-        {
-          id: "cpf",
-          tipo: "texto_curto",
-          label: "CPF",
-          placeholder: "000.000.000-00",
-          obrigatorio: true,
-        },
-        {
-          id: "nivel",
-          tipo: "selecao",
-          label: "Nível Pretendido",
-          placeholder: "Selecione o nível",
-          obrigatorio: true,
-          opcoes: ["Mestrado", "Doutorado"],
-        },
-        {
-          id: "graduacao",
-          tipo: "texto_curto",
-          label: "Curso de Graduação",
-          placeholder: "Digite o nome do curso de graduação",
-          obrigatorio: true,
-        },
-        {
-          id: "instituicao",
-          tipo: "texto_curto",
-          label: "Instituição de Graduação",
-          placeholder: "Digite o nome da instituição",
-          obrigatorio: true,
-        },
-        {
-          id: "ano_conclusao",
-          tipo: "selecao",
-          label: "Ano de Conclusão",
-          placeholder: "Selecione o ano de conclusão",
-          obrigatorio: true,
-          opcoes: [
-            "2025",
-            "2024",
-            "2023",
-            "2022",
-            "2021",
-            "2020",
-            "2019",
-            "2018",
-            "2017",
-            "2016",
-            "2015",
-            "Anterior a 2015",
-          ],
-        },
-        {
-          id: "linha_pesquisa",
-          tipo: "selecao",
-          label: "Linha de Pesquisa",
-          placeholder: "Selecione a linha de pesquisa",
-          obrigatorio: true,
-          opcoes: [
-            "Inteligência Artificial",
-            "Banco de Dados",
-            "Redes de Computadores",
-            "Engenharia de Software",
-            "Computação Gráfica",
-            "Segurança da Informação",
-          ],
-        },
-        {
-          id: "titulo_projeto",
-          tipo: "texto_curto",
-          label: "Título do Projeto",
-          placeholder: "Digite o título do seu projeto de pesquisa",
-          obrigatorio: true,
-        },
-        {
-          id: "resumo_projeto",
-          tipo: "texto_longo",
-          label: "Resumo do Projeto",
-          placeholder: "Apresente um resumo do seu projeto de pesquisa (máximo 500 palavras)",
-          obrigatorio: true,
-        },
-        {
-          id: "orientador_pretendido",
-          tipo: "texto_curto",
-          label: "Orientador Pretendido",
-          placeholder: "Digite o nome do orientador pretendido (se houver)",
-          obrigatorio: false,
-        },
-        {
-          id: "data_nascimento",
-          tipo: "data",
-          label: "Data de Nascimento",
-          obrigatorio: true,
-        },
-        {
-          id: "termo",
-          tipo: "checkbox",
-          label: "Declaro que as informações prestadas são verdadeiras e que estou ciente das normas do programa",
-          obrigatorio: true,
-        },
-      ],
-    },
+      "Apoio financeiro para estudantes de pós-graduação que desejam apresentar trabalhos em eventos científicos nacionais e internacionais.",
+    dataEncerramento: "2024-11-15",
   },
   {
     id: "3",
-    titulo: "Edital de Extensão: Curso de Línguas Estrangeiras",
+    titulo: "Programa de Monitoria",
     descricao:
-      "Seleção de alunos para cursos gratuitos de línguas estrangeiras (Inglês, Espanhol, Francês e Alemão) oferecidos pelo Departamento de Letras.",
-    dataPublicacao: new Date("2025-03-01"),
-    dataEncerramento: new Date("2025-03-30"),
-    dataCriacao: new Date("2025-02-15"),
-    formulario: {
-      id: "3",
-      dataInicio: new Date("2025-03-01"),
-      dataFim: new Date("2025-03-30"),
-      campos: [
-        {
-          id: "nome",
-          tipo: "texto_curto",
-          label: "Nome Completo",
-          placeholder: "Digite seu nome completo",
-          obrigatorio: true,
-        },
-        {
-          id: "email",
-          tipo: "texto_curto",
-          label: "E-mail",
-          placeholder: "Digite seu e-mail",
-          obrigatorio: true,
-        },
-        {
-          id: "telefone",
-          tipo: "texto_curto",
-          label: "Telefone",
-          placeholder: "(00) 00000-0000",
-          obrigatorio: true,
-        },
-        {
-          id: "matricula",
-          tipo: "texto_curto",
-          label: "Número de Matrícula",
-          placeholder: "Digite seu número de matrícula",
-          obrigatorio: true,
-        },
-        {
-          id: "curso",
-          tipo: "texto_curto",
-          label: "Curso",
-          placeholder: "Digite o nome do seu curso",
-          obrigatorio: true,
-        },
-        {
-          id: "periodo",
-          tipo: "selecao",
-          label: "Período Atual",
-          placeholder: "Selecione seu período atual",
-          obrigatorio: true,
-          opcoes: ["1º", "2º", "3º", "4º", "5º", "6º", "7º", "8º", "9º", "10º"],
-        },
-        {
-          id: "idioma",
-          tipo: "selecao",
-          label: "Idioma de Interesse",
-          placeholder: "Selecione o idioma",
-          obrigatorio: true,
-          opcoes: ["Inglês", "Espanhol", "Francês", "Alemão"],
-        },
-        {
-          id: "nivel",
-          tipo: "selecao",
-          label: "Nível",
-          placeholder: "Selecione o nível",
-          obrigatorio: true,
-          opcoes: ["Iniciante", "Básico", "Intermediário", "Avançado"],
-        },
-        {
-          id: "turno",
-          tipo: "selecao",
-          label: "Turno de Preferência",
-          placeholder: "Selecione o turno",
-          obrigatorio: true,
-          opcoes: ["Manhã", "Tarde", "Noite"],
-        },
-        {
-          id: "experiencia",
-          tipo: "texto_longo",
-          label: "Experiência Prévia",
-          placeholder: "Descreva sua experiência prévia com o idioma escolhido",
-          obrigatorio: false,
-        },
-        {
-          id: "termo",
-          tipo: "checkbox",
-          label: "Declaro ter disponibilidade para frequentar as aulas nos horários estabelecidos",
-          obrigatorio: true,
-        },
-      ],
-    },
+      "O Programa de Monitoria visa promover a cooperação entre alunos e professores, aprimorando o processo de ensino-aprendizagem.",
+    dataEncerramento: "2024-10-30",
+  },
+  {
+    id: "4",
+    titulo: "Bolsa de Extensão",
+    descricao:
+      "O Programa de Extensão oferece bolsas para alunos que participam de projetos de extensão universitária, promovendo a interação entre a universidade e a sociedade.",
+    dataEncerramento: "2024-09-20",
+  },
+  {
+    id: "5",
+    titulo: "Programa de Apoio à Pesquisa",
+    descricao:
+      "O Programa de Apoio à Pesquisa (PAP) visa fortalecer a pesquisa científica e tecnológica na universidade, oferecendo suporte financeiro e infraestrutura para projetos de pesquisa.",
+    dataEncerramento: "2024-08-10",
   },
 ]
 
-// Formulários
-const formulariosData = [
-  {
-    id: "1",
-    editalId: "1",
-    titulo: "Formulário de Inscrição - Iniciação Científica",
-    campos: [
-      {
-        id: "nome",
-        tipo: "texto_curto",
-        label: "Nome Completo",
-        placeholder: "Digite seu nome completo",
-        obrigatorio: true,
-      },
-      {
-        id: "email",
-        tipo: "texto_curto",
-        label: "E-mail",
-        placeholder: "Digite seu e-mail",
-        obrigatorio: true,
-      },
-      {
-        id: "telefone",
-        tipo: "texto_curto",
-        label: "Telefone",
-        placeholder: "(00) 00000-0000",
-        obrigatorio: true,
-      },
-      {
-        id: "matricula",
-        tipo: "texto_curto",
-        label: "Número de Matrícula",
-        placeholder: "Digite seu número de matrícula",
-        obrigatorio: true,
-      },
-      {
-        id: "curso",
-        tipo: "selecao",
-        label: "Curso",
-        placeholder: "Selecione seu curso",
-        obrigatorio: true,
-        opcoes: [
-          "Ciência da Computação",
-          "Engenharia de Software",
-          "Sistemas de Informação",
-          "Engenharia Civil",
-          "Medicina",
-          "Direito",
-          "Outro",
-        ],
-      },
-      {
-        id: "periodo",
-        tipo: "selecao",
-        label: "Período Atual",
-        placeholder: "Selecione seu período atual",
-        obrigatorio: true,
-        opcoes: ["1º", "2º", "3º", "4º", "5º", "6º", "7º", "8º", "9º", "10º"],
-      },
-      {
-        id: "area_interesse",
-        tipo: "selecao",
-        label: "Área de Interesse",
-        placeholder: "Selecione a área de interesse",
-        obrigatorio: true,
-        opcoes: [
-          "Inteligência Artificial",
-          "Banco de Dados",
-          "Redes de Computadores",
-          "Engenharia de Software",
-          "Computação Gráfica",
-          "Segurança da Informação",
-        ],
-      },
-      {
-        id: "experiencia",
-        tipo: "texto_longo",
-        label: "Experiência Prévia",
-        placeholder: "Descreva sua experiência prévia em pesquisa ou na área de interesse",
-        obrigatorio: false,
-      },
-      {
-        id: "motivacao",
-        tipo: "texto_longo",
-        label: "Carta de Motivação",
-        placeholder: "Explique sua motivação para participar do programa de iniciação científica",
-        obrigatorio: true,
-      },
-      {
-        id: "disponibilidade",
-        tipo: "checkbox",
-        label: "Declaro ter disponibilidade de 20 horas semanais para dedicação ao projeto",
-        obrigatorio: true,
-      },
-    ],
-  },
-  {
-    id: "2",
-    editalId: "2",
-    titulo: "Formulário de Inscrição - Pós-Graduação",
-    campos: [
-      {
-        id: "nome",
-        tipo: "texto_curto",
-        label: "Nome Completo",
-        placeholder: "Digite seu nome completo",
-        obrigatorio: true,
-      },
-      {
-        id: "email",
-        tipo: "texto_curto",
-        label: "E-mail",
-        placeholder: "Digite seu e-mail",
-        obrigatorio: true,
-      },
-      {
-        id: "telefone",
-        tipo: "texto_curto",
-        label: "Telefone",
-        placeholder: "(00) 00000-0000",
-        obrigatorio: true,
-      },
-      {
-        id: "cpf",
-        tipo: "texto_curto",
-        label: "CPF",
-        placeholder: "000.000.000-00",
-        obrigatorio: true,
-      },
-      {
-        id: "nivel",
-        tipo: "selecao",
-        label: "Nível Pretendido",
-        placeholder: "Selecione o nível",
-        obrigatorio: true,
-        opcoes: ["Mestrado", "Doutorado"],
-      },
-      {
-        id: "graduacao",
-        tipo: "texto_curto",
-        label: "Curso de Graduação",
-        placeholder: "Digite o nome do curso de graduação",
-        obrigatorio: true,
-      },
-      {
-        id: "instituicao",
-        tipo: "texto_curto",
-        label: "Instituição de Graduação",
-        placeholder: "Digite o nome da instituição",
-        obrigatorio: true,
-      },
-      {
-        id: "ano_conclusao",
-        tipo: "selecao",
-        label: "Ano de Conclusão",
-        placeholder: "Selecione o ano de conclusão",
-        obrigatorio: true,
-        opcoes: [
-          "2025",
-          "2024",
-          "2023",
-          "2022",
-          "2021",
-          "2020",
-          "2019",
-          "2018",
-          "2017",
-          "2016",
-          "2015",
-          "Anterior a 2015",
-        ],
-      },
-      {
-        id: "linha_pesquisa",
-        tipo: "selecao",
-        label: "Linha de Pesquisa",
-        placeholder: "Selecione a linha de pesquisa",
-        obrigatorio: true,
-        opcoes: [
-          "Inteligência Artificial",
-          "Banco de Dados",
-          "Redes de Computadores",
-          "Engenharia de Software",
-          "Computação Gráfica",
-          "Segurança da Informação",
-        ],
-      },
-      {
-        id: "titulo_projeto",
-        tipo: "texto_curto",
-        label: "Título do Projeto",
-        placeholder: "Digite o título do seu projeto de pesquisa",
-        obrigatorio: true,
-      },
-      {
-        id: "resumo_projeto",
-        tipo: "texto_longo",
-        label: "Resumo do Projeto",
-        placeholder: "Apresente um resumo do seu projeto de pesquisa (máximo 500 palavras)",
-        obrigatorio: true,
-      },
-      {
-        id: "orientador_pretendido",
-        tipo: "texto_curto",
-        label: "Orientador Pretendido",
-        placeholder: "Digite o nome do orientador pretendido (se houver)",
-        obrigatorio: false,
-      },
-      {
-        id: "data_nascimento",
-        tipo: "data",
-        label: "Data de Nascimento",
-        obrigatorio: true,
-      },
-      {
-        id: "termo",
-        tipo: "checkbox",
-        label: "Declaro que as informações prestadas são verdadeiras e que estou ciente das normas do programa",
-        obrigatorio: true,
-      },
-    ],
-  },
-  {
-    id: "3",
-    editalId: "3",
-    titulo: "Formulário de Inscrição - Curso de Línguas",
-    campos: [
-      {
-        id: "nome",
-        tipo: "texto_curto",
-        label: "Nome Completo",
-        placeholder: "Digite seu nome completo",
-        obrigatorio: true,
-      },
-      {
-        id: "email",
-        tipo: "texto_curto",
-        label: "E-mail",
-        placeholder: "Digite seu e-mail",
-        obrigatorio: true,
-      },
-      {
-        id: "telefone",
-        tipo: "texto_curto",
-        label: "Telefone",
-        placeholder: "(00) 00000-0000",
-        obrigatorio: true,
-      },
-      {
-        id: "matricula",
-        tipo: "texto_curto",
-        label: "Número de Matrícula",
-        placeholder: "Digite seu número de matrícula",
-        obrigatorio: true,
-      },
-      {
-        id: "curso",
-        tipo: "texto_curto",
-        label: "Curso",
-        placeholder: "Digite o nome do seu curso",
-        obrigatorio: true,
-      },
-      {
-        id: "periodo",
-        tipo: "selecao",
-        label: "Período Atual",
-        placeholder: "Selecione seu período atual",
-        obrigatorio: true,
-        opcoes: ["1º", "2º", "3º", "4º", "5º", "6º", "7º", "8º", "9º", "10º"],
-      },
-      {
-        id: "idioma",
-        tipo: "selecao",
-        label: "Idioma de Interesse",
-        placeholder: "Selecione o idioma",
-        obrigatorio: true,
-        opcoes: ["Inglês", "Espanhol", "Francês", "Alemão"],
-      },
-      {
-        id: "nivel",
-        tipo: "selecao",
-        label: "Nível",
-        placeholder: "Selecione o nível",
-        obrigatorio: true,
-        opcoes: ["Iniciante", "Básico", "Intermediário", "Avançado"],
-      },
-      {
-        id: "turno",
-        tipo: "selecao",
-        label: "Turno de Preferência",
-        placeholder: "Selecione o turno",
-        obrigatorio: true,
-        opcoes: ["Manhã", "Tarde", "Noite"],
-      },
-      {
-        id: "experiencia",
-        tipo: "texto_longo",
-        label: "Experiência Prévia",
-        placeholder: "Descreva sua experiência prévia com o idioma escolhido",
-        obrigatorio: false,
-      },
-      {
-        id: "termo",
-        tipo: "checkbox",
-        label: "Declaro ter disponibilidade para frequentar as aulas nos horários estabelecidos",
-        obrigatorio: true,
-      },
-    ],
-  },
-]
-
-// Inscrições
+// Dados estáticos para as inscrições (simulando dados do banco de dados)
 const inscricoesData = [
   {
     id: "1",
     editalId: "1",
-    numero: "INS-2025-0001",
-    nome: "João Silva",
-    email: "joao.silva@email.com",
-    telefone: "(11) 98765-4321",
+    data: "2023-03-15",
+    status: "Aprovado",
+    nome: "João da Silva",
+    email: "joao.silva@example.com",
     cpf: "123.456.789-00",
-    data: "05/05/2025",
-    status: "Em análise",
-    atualizacao: "10/05/2025",
+    telefone: "(11) 99999-8888",
     respostas: [
-      { pergunta: "Nome Completo", resposta: "João Silva" },
-      { pergunta: "E-mail", resposta: "joao.silva@email.com" },
-      { pergunta: "Telefone", resposta: "(11) 98765-4321" },
-      { pergunta: "Número de Matrícula", resposta: "2023001234" },
-      { pergunta: "Curso", resposta: "Ciência da Computação" },
-      { pergunta: "Período Atual", resposta: "5º" },
-      { pergunta: "Área de Interesse", resposta: "Inteligência Artificial" },
-      {
-        pergunta: "Experiência Prévia",
-        resposta: "Participei de um projeto de reconhecimento facial utilizando Python e OpenCV durante 6 meses.",
-      },
-      {
-        pergunta: "Carta de Motivação",
-        resposta:
-          "Tenho grande interesse em aprofundar meus conhecimentos em Inteligência Artificial, especialmente em aprendizado de máquina. Acredito que a iniciação científica será uma excelente oportunidade para desenvolver habilidades de pesquisa e contribuir para avanços na área.",
-      },
+      { pergunta: "Número de Matrícula", resposta: "123456" },
+      { pergunta: "Curso", resposta: "Engenharia da Computação" },
+      { pergunta: "Carta de Motivação", resposta: "Tenho grande interesse na área..." },
     ],
-    documentos: [
-      { nome: "CPF.pdf", tamanho: "250 KB" },
-      { nome: "RG.pdf", tamanho: "300 KB" },
-      { nome: "Histórico Escolar.pdf", tamanho: "1.2 MB" },
-      { nome: "Currículo Lattes.pdf", tamanho: "500 KB" },
-    ],
+    documentos: [{ nome: "RG.pdf" }, { nome: "CPF.pdf" }, { nome: "Historico.pdf" }],
   },
   {
     id: "2",
-    editalId: "1",
-    numero: "INS-2025-0002",
-    nome: "Maria Oliveira",
-    email: "maria.oliveira@email.com",
-    telefone: "(21) 98765-4321",
+    editalId: "2",
+    data: "2023-04-20",
+    status: "Em análise",
+    nome: "Maria Souza",
+    email: "maria.souza@example.com",
     cpf: "987.654.321-00",
-    data: "07/05/2025",
-    status: "Aprovado",
-    atualizacao: "15/05/2025",
+    telefone: "(21) 98888-7777",
     respostas: [
-      { pergunta: "Nome Completo", resposta: "Maria Oliveira" },
-      { pergunta: "E-mail", resposta: "maria.oliveira@email.com" },
-      { pergunta: "Telefone", resposta: "(21) 98765-4321" },
-      { pergunta: "Número de Matrícula", resposta: "2022005678" },
-      { pergunta: "Curso", resposta: "Engenharia de Software" },
-      { pergunta: "Período Atual", resposta: "6º" },
-      { pergunta: "Área de Interesse", resposta: "Engenharia de Software" },
-      {
-        pergunta: "Experiência Prévia",
-        resposta:
-          "Participei do desenvolvimento de um sistema de gestão acadêmica como parte do estágio supervisionado. Tenho experiência com Java, Spring Boot e Angular.",
-      },
-      {
-        pergunta: "Carta de Motivação",
-        resposta:
-          "Desejo participar do programa de iniciação científica para aprofundar meus conhecimentos em metodologias ágeis e qualidade de software. Tenho interesse em pesquisar sobre técnicas de teste automatizado e sua aplicação em projetos de grande escala.",
-      },
+      { pergunta: "Número de Matrícula", resposta: "654321" },
+      { pergunta: "Curso", resposta: "Administração" },
+      { pergunta: "Carta de Motivação", resposta: "Busco aprimorar meus conhecimentos..." },
     ],
-    documentos: [
-      { nome: "CPF.pdf", tamanho: "200 KB" },
-      { nome: "RG.pdf", tamanho: "250 KB" },
-      { nome: "Histórico Escolar.pdf", tamanho: "900 KB" },
-      { nome: "Currículo Lattes.pdf", tamanho: "450 KB" },
-      { nome: "Carta de Recomendação.pdf", tamanho: "350 KB" },
-    ],
+    documentos: [{ nome: "RG.pdf" }, { nome: "CPF.pdf" }, { nome: "Comprovante.pdf" }],
   },
   {
     id: "3",
     editalId: "1",
-    numero: "INS-2025-0003",
-    nome: "Pedro Santos",
-    email: "pedro.santos@email.com",
-    telefone: "(31) 98765-4321",
+    data: "2023-05-10",
+    status: "Reprovado",
+    nome: "Carlos Ferreira",
+    email: "carlos.ferreira@example.com",
     cpf: "456.789.123-00",
-    data: "10/05/2025",
-    status: "Pendente",
-    atualizacao: "10/05/2025",
+    telefone: "(31) 97777-6666",
     respostas: [
-      { pergunta: "Nome Completo", resposta: "Pedro Santos" },
-      { pergunta: "E-mail", resposta: "pedro.santos@email.com" },
-      { pergunta: "Telefone", resposta: "(31) 98765-4321" },
-      { pergunta: "Número de Matrícula", resposta: "2024001234" },
-      { pergunta: "Curso", resposta: "Sistemas de Informação" },
-      { pergunta: "Período Atual", resposta: "3º" },
-      { pergunta: "Área de Interesse", resposta: "Banco de Dados" },
-      {
-        pergunta: "Experiência Prévia",
-        resposta:
-          "Tenho experiência básica com SQL e modelagem de dados. Participei de um curso online sobre MongoDB e sistemas NoSQL.",
-      },
-      {
-        pergunta: "Carta de Motivação",
-        resposta:
-          "Gostaria de participar do programa de iniciação científica para aprofundar meus conhecimentos em bancos de dados distribuídos e técnicas de otimização de consultas. Tenho interesse em contribuir para pesquisas que possam melhorar o desempenho de sistemas de informação.",
-      },
+      { pergunta: "Número de Matrícula", resposta: "987654" },
+      { pergunta: "Curso", resposta: "Direito" },
+      { pergunta: "Carta de Motivação", resposta: "Desejo contribuir com a sociedade..." },
     ],
-    documentos: [
-      { nome: "CPF.pdf", tamanho: "220 KB" },
-      { nome: "RG.pdf", tamanho: "270 KB" },
-      { nome: "Histórico Escolar.pdf", tamanho: "800 KB" },
-      { nome: "Currículo Lattes.pdf", tamanho: "400 KB" },
-    ],
+    documentos: [{ nome: "RG.pdf" }, { nome: "CPF.pdf" }, { nome: "Declaracao.pdf" }],
   },
   {
     id: "4",
-    editalId: "2",
-    numero: "INS-2025-0004",
-    nome: "Ana Souza",
-    email: "ana.souza@email.com",
-    telefone: "(41) 98765-4321",
-    cpf: "789.123.456-00",
-    data: "15/04/2025",
-    status: "Em análise",
-    atualizacao: "20/04/2025",
+    editalId: "3",
+    data: "2023-06-01",
+    status: "Aprovado",
+    nome: "Ana Paula",
+    email: "ana.paula@example.com",
+    cpf: "654.321.987-00",
+    telefone: "(41) 96666-5555",
     respostas: [
-      { pergunta: "Nome Completo", resposta: "Ana Souza" },
-      { pergunta: "E-mail", resposta: "ana.souza@email.com" },
-      { pergunta: "Telefone", resposta: "(41) 98765-4321" },
-      // Outras respostas aqui
+      { pergunta: "Número de Matrícula", resposta: "345678" },
+      { pergunta: "Curso", resposta: "Medicina" },
+      { pergunta: "Carta de Motivação", resposta: "Almejo ajudar as pessoas..." },
     ],
-    documentos: [
-      { nome: "CPF.pdf", tamanho: "250 KB" },
-      { nome: "RG.pdf", tamanho: "300 KB" },
-      { nome: "Histórico Escolar.pdf", tamanho: "1.2 MB" },
-      { nome: "Currículo Lattes.pdf", tamanho: "500 KB" },
+    documentos: [{ nome: "RG.pdf" }, { nome: "CPF.pdf" }, { nome: "Curriculo.pdf" }],
+  },
+  {
+    id: "5",
+    editalId: "4",
+    data: "2023-07-15",
+    status: "Finalizado",
+    nome: "Ricardo Oliveira",
+    email: "ricardo.oliveira@example.com",
+    cpf: "321.654.987-00",
+    telefone: "(51) 95555-4444",
+    respostas: [
+      { pergunta: "Número de Matrícula", resposta: "876543" },
+      { pergunta: "Curso", resposta: "Psicologia" },
+      { pergunta: "Carta de Motivação", resposta: "Quero entender a mente humana..." },
     ],
+    documentos: [{ nome: "RG.pdf" }, { nome: "CPF.pdf" }, { nome: "Diploma.pdf" }],
   },
 ]
+
+// Funções para acessar os dados
+export async function getEditais() {
+  // Em um cenário real, isso seria uma consulta ao banco de dados
+  return editaisData.map((edital) => ({
+    id: edital.id,
+    titulo: edital.titulo,
+    descricao: edital.descricao,
+    departamento: "Departamento de Tecnologia",
+    prazo: edital.dataEncerramento ? new Date(edital.dataEncerramento).toLocaleDateString("pt-BR") : "Não definido",
+    status: new Date() < new Date(edital.dataEncerramento || "") ? "aberto" : "fechado",
+    vagas: "5",
+    valorBolsa: "R$ 500,00",
+    cargaHoraria: "20h semanais",
+    requisitos: [
+      "Estar regularmente matriculado em curso de graduação",
+      "Ter concluído pelo menos 2 semestres do curso",
+      "Possuir conhecimentos básicos na área de interesse",
+      "Não possuir vínculo empregatício",
+    ],
+    documentos: ["Cópia do RG e CPF", "Histórico escolar atualizado", "Currículo Lattes", "Comprovante de matrícula"],
+  }))
+}
+
+export async function getEditalById(id: string) {
+  const edital = editaisData.find((e) => e.id === id)
+
+  if (!edital) return null
+
+  return {
+    id: edital.id,
+    titulo: edital.titulo,
+    descricao: edital.descricao,
+    departamento: "Departamento de Tecnologia",
+    prazo: edital.dataEncerramento ? new Date(edital.dataEncerramento).toLocaleDateString("pt-BR") : "Não definido",
+    status: new Date() < new Date(edital.dataEncerramento || "") ? "aberto" : "fechado",
+    vagas: "5",
+    valorBolsa: "R$ 500,00",
+    cargaHoraria: "20h semanais",
+    requisitos: [
+      "Estar regularmente matriculado em curso de graduação",
+      "Ter concluído pelo menos 2 semestres do curso",
+      "Possuir conhecimentos básicos na área de interesse",
+      "Não possuir vínculo empregatício",
+    ],
+    documentos: ["Cópia do RG e CPF", "Histórico escolar atualizado", "Currículo Lattes", "Comprovante de matrícula"],
+  }
+}
+
+export async function getInscricoes() {
+  // Em um cenário real, isso seria uma consulta ao banco de dados
+  return inscricoesData.map((inscricao) => {
+    const edital = editaisData.find((e) => e.id === inscricao.editalId)
+
+    return {
+      id: inscricao.id,
+      edital: {
+        id: edital?.id || "",
+        titulo: edital?.titulo || "",
+        descricao: edital?.descricao || "",
+        departamento: "Departamento de Tecnologia",
+        prazo: edital?.dataEncerramento
+          ? new Date(edital.dataEncerramento).toLocaleDateString("pt-BR")
+          : "Não definido",
+      },
+      dataInscricao: inscricao.data,
+      status:
+        inscricao.status === "Em análise"
+          ? "pendente"
+          : inscricao.status === "Aprovado"
+            ? "aprovado"
+            : inscricao.status === "Reprovado"
+              ? "rejeitado"
+              : "finalizado",
+    }
+  })
+}
+
+export async function getInscricaoById(id: string) {
+  const inscricao = inscricoesData.find((i) => i.id === id)
+
+  if (!inscricao) return null
+
+  const edital = editaisData.find((e) => e.id === inscricao.editalId)
+
+  return {
+    id: inscricao.id,
+    edital: {
+      id: edital?.id || "",
+      titulo: edital?.titulo || "",
+      descricao: edital?.descricao || "",
+      departamento: "Departamento de Tecnologia",
+      prazo: edital?.dataEncerramento ? new Date(edital.dataEncerramento).toLocaleDateString("pt-BR") : "Não definido",
+      valorBolsa: "R$ 500,00",
+      cargaHoraria: "20h semanais",
+    },
+    dataInscricao: inscricao.data,
+    status:
+      inscricao.status === "Em análise"
+        ? "pendente"
+        : inscricao.status === "Aprovado"
+          ? "aprovado"
+          : inscricao.status === "Reprovado"
+            ? "rejeitado"
+            : "finalizado",
+    feedback:
+      inscricao.status === "Aprovado"
+        ? "Parabéns! Sua inscrição foi aprovada."
+        : inscricao.status === "Reprovado"
+          ? "Infelizmente sua inscrição não foi aprovada."
+          : null,
+    nome: inscricao.nome,
+    email: inscricao.email,
+    cpf: inscricao.cpf,
+    telefone: inscricao.telefone,
+    matricula: inscricao.respostas.find((r) => r.pergunta === "Número de Matrícula")?.resposta || "",
+    curso: inscricao.respostas.find((r) => r.pergunta === "Curso")?.resposta || "",
+    motivacao: inscricao.respostas.find((r) => r.pergunta === "Carta de Motivação")?.resposta || "",
+    documentos: inscricao.documentos.map((doc) => doc.nome),
+  }
+}

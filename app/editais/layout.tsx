@@ -4,5 +4,6 @@ export default function EditaisLayout({
 }: {
   children: React.ReactNode
 }) {
+  console.log("Renderizando página de EditaisLayout")
   return <>{children}</>
 }

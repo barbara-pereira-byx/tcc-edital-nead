@@ -14,6 +14,7 @@ export default async function EditaisPage({
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
+  console.log("Renderizando página de EditaisPage")
   const session = await getServerSession(authOptions)
 
   const isAdmin = session?.user?.tipo === 1

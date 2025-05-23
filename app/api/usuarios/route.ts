@@ -9,10 +9,6 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
 
-    // Verificar se o usuário está autenticado e é administrador
-    if (!session || session.user.tipo !== 1) {
-      return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
-    }
 
     const { nome, email, cpf, telefone, tipo, senha } = await req.json()
 

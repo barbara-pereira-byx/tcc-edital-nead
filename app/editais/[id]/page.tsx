@@ -22,7 +22,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FormularioInscricao } from "@/components/formulario-inscricao"
 import { FormularioPreview } from "@/components/formulario-preview"
 import { ListaInscritos } from "@/components/lista-inscritos"
-import { SenhaEditalForm } from "@/components/senha-edital-form"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -189,22 +188,9 @@ export default async function EditalPage({ params }: { params: { id: string } })
                 </TabsTrigger>
               )}
             </TabsList>
-            {/* Formulário de senha para usuários comuns */} {!isAdmin && edital.senha && ( <div className="mt-8 pt-6 border-t border-slate-200"> <SenhaEditalForm editalId={edital.id} senha={edital.senha} /> </div> )}
-
             <TabsContent value="anexos">
               <Card>
                 <CardContent className="p-6 space-y-6">
-                  {/* Conteúdo do edital */}
-                  <div>
-                    <h2 className="text-xl font-semibold mb-4">Descrição</h2>
-                    <div className="prose max-w-none">
-                      {edital.descricao ? (
-                        <div dangerouslySetInnerHTML={{ __html: edital.descricao }} />
-                      ) : (
-                        <p className="text-slate-500 italic">Nenhuma descrição disponível.</p>
-                      )}
-                    </div>
-                  </div>
 
                   {/* Lista de anexos */}
                   <div>

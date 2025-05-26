@@ -63,69 +63,86 @@ export async function GET(req: Request) {
     const page = Number.parseInt(searchParams.get("page") || "1")
     const perPage = Number.parseInt(searchParams.get("perPage") || "10")
     const status = searchParams.get("status")
+    const dataInicioParam = searchParams.get("dataInicio")
+    const dataFimParam = searchParams.get("dataFim")
 
     const hoje = new Date()
-    const where: any = {}
 
+    function parseDate(dateStr: string | null) {
+      if (!dateStr) return null
+      const parts = dateStr.split("-")
+      if (parts.length !== 3) return null
+      const [y, m, d] = parts.map(Number)
+      return new Date(y, m - 1, d)
+    }
+
+    const dataInicio = parseDate(dataInicioParam)
+    const dataFim = parseDate(dataFimParam)
+
+    const filters: any[] = []
+
+    // Busca textual
     if (search) {
-      where.OR = [
-        { titulo: { contains: search, mode: "insensitive" } },
-        {
-          secoes: {
-            some: {
-              titulo: { contains: search, mode: "insensitive" },
+      filters.push({
+        OR: [
+          { titulo: { contains: search, mode: "insensitive" } },
+          {
+            secoes: {
+              some: {
+                titulo: { contains: search, mode: "insensitive" },
+              },
             },
           },
-        },
-      ]
+        ],
+      })
     }
 
-    if (status === "abertos") {
-      where.OR = [
-        {
-          formulario: {
-            NOT: null,
-            dataInicio: { lte: hoje },
-            dataFim: { gte: hoje },
-          },
-        },
-        {
-          formulario: null,
-          dataPublicacao: { lte: hoje },
-          dataEncerramento: { gte: hoje },
-        },
-      ]
+    // Status
+    if (status) {
+      if (status === "abertos") {
+        filters.push({
+          AND: [
+            { dataPublicacao: { lte: hoje } },
+            {
+              OR: [
+                { dataEncerramento: { gte: hoje } },
+                { dataEncerramento: null },
+              ],
+            },
+          ],
+        })
+      } else if (status === "futuros") {
+        filters.push({ dataPublicacao: { gt: hoje } })
+      } else if (status === "encerrados") {
+        filters.push({ dataEncerramento: { lt: hoje } })
+      }
     }
-    
-    if (status === "futuros") {
-      where.OR = [
-        {
-          formulario: {
-            NOT: null,
-            dataInicio: { gt: hoje }, // Formulário com data de início no futuro
-          },
-        },
-        {
-          formulario: null,
-          dataPublicacao: { gt: hoje }, // Edital sem formulário, mas com data de publicação no futuro
-        },
-      ];
+
+    // Intervalo de datas (na publicação ou encerramento)
+    if (dataInicio && dataFim) {
+      filters.push({
+        OR: [
+          { dataPublicacao: { gte: dataInicio, lte: dataFim } },
+          { dataEncerramento: { gte: dataInicio, lte: dataFim } },
+        ],
+      })
+    } else if (dataInicio) {
+      filters.push({
+        OR: [
+          { dataPublicacao: { gte: dataInicio } },
+          { dataEncerramento: { gte: dataInicio } },
+        ],
+      })
+    } else if (dataFim) {
+      filters.push({
+        OR: [
+          { dataPublicacao: { lte: dataFim } },
+          { dataEncerramento: { lte: dataFim } },
+        ],
+      })
     }
-    
-    if (status === "encerrados") {
-      where.OR = [
-        {
-          formulario: {
-            NOT: null,
-            dataFim: { lt: hoje }, // Formulário com data de fim no passado
-          },
-        },
-        {
-          formulario: null,
-          dataEncerramento: { lt: hoje }, // Edital sem formulário, mas com data de encerramento no passado
-        },
-      ];
-    }
+
+    const where = filters.length > 0 ? { AND: filters } : {}
 
     const editais = await prisma.edital.findMany({
       where,
@@ -153,4 +170,3 @@ export async function GET(req: Request) {
     return NextResponse.json({ message: "Erro ao buscar editais" }, { status: 500 })
   }
 }
-

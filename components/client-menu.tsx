@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import type React from "react"
 import { signOut, signIn, useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -10,15 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import {
   LogOut,
   User,
   Lock,
   FileText,
   Users,
-  Settings,
   ClipboardList,
   ChevronRight,
   UserPlus,
@@ -26,7 +23,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
+export default function ClientMenu() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { toast } = useToast()
@@ -44,7 +41,7 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
   const handleLogout = async () => {
     setIsLoading(true)
     await signOut({ redirect: false })
-    router.push("/editais")
+    router.refresh() // força atualização da página após logout
     setIsLoading(false)
   }
 
@@ -67,14 +64,7 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
         })
         setIsLoading(false)
       } else {
-        const userResponse = await fetch("/api/auth/session")
-        const session = await userResponse.json()
-
-        if (session?.user?.tipo === 1) {
-          router.push("/editais")
-        } else {
-          router.push("/editais")
-        }
+        router.refresh()
         setIsLoading(false)
       }
     } catch (error) {
@@ -87,16 +77,13 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
     }
   }
 
-  // Função para obter as iniciais do nome do usuário
   const getInitials = (name: string) => {
     if (!name) return "U"
     const names = name.split(" ")
-    if (names.length === 1) return names[0].charAt(0).toUpperCase()
-    return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase()
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase()
   }
 
-  // Exibe carregamento enquanto status da sessão está sendo verificado
-  if (status === "loading") {
+  if (status === "loading" || (status === "authenticated" && !session)) {
     return (
       <Card className="w-full overflow-hidden border border-slate-200">
         <div className="flex justify-center items-center h-40">
@@ -106,8 +93,7 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
     )
   }
 
-  // Modal de login, caso não autenticado
-  if (!session) {
+  if (status === "unauthenticated") {
     return (
       <Card className="w-full overflow-hidden border border-slate-200">
         <CardContent className="p-4 pt-6">
@@ -172,7 +158,8 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
     )
   }
 
-  // Modal de menu, caso autenticado
+  const isAdmin = session?.user?.tipo === 1
+
   return (
     <Card className="w-full overflow-hidden border border-slate-200">
       <CardContent className="p-0">
@@ -247,7 +234,7 @@ export default function ClientMenu({ isAdmin }: { isAdmin: boolean }) {
             variant="outline"
             className={cn(
               "w-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300",
-              isLoading && "opacity-70 cursor-not-allowed",
+              isLoading && "opacity-70 cursor-not-allowed"
             )}
             disabled={isLoading}
           >

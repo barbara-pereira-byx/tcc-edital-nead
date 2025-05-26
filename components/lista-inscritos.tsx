@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { useSession } from 'next-auth/react'
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,9 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [respostas, setRespostas] = useState<any[]>([])
+  const { data: session } = useSession()
+
+  const isAdmin = session?.user?.tipo === 1
 
   // Filtrar inscrições com base no termo de busca
   const filteredInscricoes = inscricoes.filter(
@@ -224,7 +228,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
           <Badge variant="outline" className="text-sm py-1 px-3">
             Total: {inscricoes.length} inscrições
           </Badge>
-          {selectedIds.length > 0 && (
+          {selectedIds.length > 0 && isAdmin && (
             <Button
               variant="destructive"
               size="sm"
@@ -274,18 +278,20 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                       <Button variant="ghost" size="sm" onClick={() => abrirDetalhes(inscricao)} disabled={isLoading}>
                         <Eye className="h-4 w-4 mr-1" /> Ver
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-red-600 hover:text-red-800 hover:bg-red-100"
-                        onClick={() => {
-                          setSelectedInscricao(inscricao)
-                          setIsConfirmDialogOpen(true)
-                        }}
-                        disabled={isLoading}
-                      >
-                        <Trash className="h-4 w-4 mr-1" /> Cancelar
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-800 hover:bg-red-100"
+                          onClick={() => {
+                            setSelectedInscricao(inscricao)
+                            setIsConfirmDialogOpen(true)
+                          }}
+                          disabled={isLoading}
+                        >
+                          <Trash className="h-4 w-4 mr-1" /> Cancelar
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -342,10 +348,10 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                 <div className="font-medium">{rotulo}</div>
                                 <div className="col-span-2">
                                   {isArquivo ? (
-                                    <div className="flex items-center gap-2">
-                                      <FileText className="h-4 w-4 text-blue-600" />
-                                      <span>{resposta.valor || "-"}</span>
-                                      <Button variant="outline" size="sm" asChild className="ml-2">
+                                    <div className="flex items-center gap-2 max-w-full">
+                                      <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                      <span className="truncate max-w-[calc(100%-4rem)] block">{resposta.valor || "-"}</span>
+                                      <Button variant="outline" size="sm" asChild className="flex-shrink-0 ml-2">
                                         <a
                                           href={`/api/arquivos/${resposta.id}`}
                                           target="_blank"
@@ -435,18 +441,19 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                   </Card>
                 </TabsContent>
               </Tabs>
-
               <DialogFooter>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setIsDialogOpen(false)
-                    setIsConfirmDialogOpen(true)
-                  }}
-                  disabled={isLoading}
-                >
-                  <Trash className="h-4 w-4 mr-1" /> Cancelar Inscrição
-                </Button>
+                {isAdmin && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setIsDialogOpen(false)
+                      setIsConfirmDialogOpen(true)
+                    }}
+                    disabled={isLoading}
+                  >
+                    <Trash className="h-4 w-4 mr-1" /> Cancelar Inscrição
+                  </Button>
+                )}
               </DialogFooter>
             </>
           )}

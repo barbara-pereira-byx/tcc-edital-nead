@@ -108,7 +108,7 @@ export default async function EditaisPage({
               {/* Menu do cliente */}
               <Card>
                 <CardContent className="p-4">
-                  <ClientMenu isAdmin={isAdmin} />
+                  <ClientMenu/>
                 </CardContent>
               </Card>
 

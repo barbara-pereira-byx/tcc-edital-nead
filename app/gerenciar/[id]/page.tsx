@@ -67,7 +67,7 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
                   <h3 className="text-lg font-medium mb-2">Nenhum formulário associado</h3>
                   <p className="text-muted-foreground mb-4">Este edital ainda não possui um formulário de inscrição.</p>
                   <Link
-                    href={`/gerenciar/formulario/novo/${edital.id}`}
+                    href={`/formulario/novo/${edital.id}`}
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
                   >
                     Criar Formulário

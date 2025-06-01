@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,11 +20,13 @@ import { Switch } from "@/components/ui/switch"
 
 interface FormularioFormProps {
   editalId?: string
-  onFormularioCreated: (formularioId: string) => void
+  onFormularioCreated?: (formularioId: string) => void
 }
 
 export function FormularioForm({ editalId, onFormularioCreated }: FormularioFormProps) {
   const { toast } = useToast()
+  const router = useRouter()
+  const [formularioCriado, setFormularioCriado] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [titulo, setTitulo] = useState("")
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
@@ -31,7 +35,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     {
       id: "1",
       nome: "Nome Completo",
-      tipo: "0", // Texto
+      tipo: "0",
       obrigatorio: true,
       categoria: "Dados Pessoais",
       tamanho: "100",
@@ -40,7 +44,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     {
       id: "2",
       nome: "E-mail",
-      tipo: "0", // Texto
+      tipo: "0",
       obrigatorio: true,
       categoria: "Dados Pessoais",
       tamanho: "100",
@@ -64,6 +68,65 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     "Documentos",
     "Outros",
   ]
+
+  useEffect(() => {
+    const carregarDadosEdital = async () => {
+      if (!editalId || formularioCriado) return
+
+      try {
+        const response = await fetch(`/api/editais/${editalId}`)
+        if (!response.ok) throw new Error("Erro ao buscar dados do edital")
+        const edital = await response.json()
+
+        const tituloEdital = edital?.titulo || ""
+        const dataInicioEdital = edital?.dataPublicacao ? new Date(edital.dataPublicacao) : undefined
+        const dataFimEdital = edital?.dataEncerramento ? new Date(edital.dataEncerramento) : undefined
+
+        setTitulo(tituloEdital)
+        setDataInicio(dataInicioEdital)
+        setDataFim(dataFimEdital)
+
+        if (tituloEdital && dataInicioEdital && dataFimEdital) {
+          const criarResponse = await fetch("/api/formularios", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              titulo: tituloEdital,
+              dataInicio: dataInicioEdital,
+              dataFim: dataFimEdital,
+              campos,
+              editalId,
+            }),
+          })
+
+          if (!criarResponse.ok) {
+            const err = await criarResponse.json()
+            throw new Error(err.message || "Erro ao criar formulário automaticamente")
+          }
+
+          const data = await criarResponse.json()
+          toast({
+            title: "Formulário criado automaticamente",
+            description: "Você pode agora personalizá-lo.",
+          })
+
+          setFormularioCriado(true)
+          if (onFormularioCreated) onFormularioCreated(data.id)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar ou criar formulário:", error)
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar/criar o formulário",
+          variant: "destructive",
+        })
+      }
+    }
+
+    carregarDadosEdital()
+  }, [editalId, formularioCriado])
 
   const adicionarCampo = () => {
     setCampos([
@@ -181,7 +244,6 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
           title: "Formulário criado com sucesso",
           description: "O formulário foi criado e está pronto para receber inscrições",
         })
-        onFormularioCreated(data.id)
       } else {
         const error = await response.json()
         toast({
@@ -388,10 +450,18 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Salvando..." : "Criar Formulário"}
-        </Button>
-      </div>
+      <Button
+        type="submit"
+        disabled={isLoading}
+        onClick={() => {
+          if (!isLoading) {
+            router.push("/gerenciar");
+          }
+        }}
+      >
+        {isLoading ? "Salvando..." : "Criar Formulário"}
+      </Button>
+    </div>
     </form>
   )
 }

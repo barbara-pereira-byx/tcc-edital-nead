@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Edit, Eye, Trash2 } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface Edital {
@@ -29,9 +29,10 @@ interface Edital {
   formulario?: {
     id: string
   } | null
-  inscricoes: {
+  inscricoes?: {
     id: string
-  }[]
+    length: number 
+  }
 }
 
 interface AdminEditaisTableProps {
@@ -129,7 +130,7 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
                   <TableCell>
                     <Badge className={status.color}>{status.label}</Badge>
                   </TableCell>
-                  <TableCell>{edital.inscricoes.length}</TableCell>
+                  <TableCell>{edital.inscricoes?.length ?? 0}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button variant="outline" size="icon" asChild>

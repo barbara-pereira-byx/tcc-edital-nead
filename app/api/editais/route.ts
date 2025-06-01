@@ -149,8 +149,15 @@ export async function GET(req: Request) {
       orderBy: { dataPublicacao: "desc" },
       skip: (page - 1) * perPage,
       take: perPage,
-      include: {
-        formulario: true,
+      select: {
+        id: true,
+        titulo: true,
+        dataPublicacao: true,
+        dataEncerramento: true,
+        formulario: { select: { id: true } },
+        _count: {
+          select: { inscricoes: true },
+        },
       },
     })
 

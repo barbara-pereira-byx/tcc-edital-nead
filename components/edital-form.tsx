@@ -33,6 +33,7 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
   const [senha, setSenha] = useState("")
   const [arquivos, setArquivos] = useState<FileUpload[]>([])
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const hoje = new Date()
 
   useEffect(() => {
     const hoje = new Date()
@@ -54,7 +55,6 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
 
   const uploadFile = async (file: File, label: string, index: number): Promise<string> => {
     try {
-      // Atualizar status para uploading
       const newArquivos = [...arquivos]
       newArquivos[index] = {
         ...newArquivos[index],
@@ -67,7 +67,6 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       formData.append("file", file)
       formData.append("label", label)
 
-      // Simular progresso de upload
       const progressInterval = setInterval(() => {
         setArquivos((prev) => {
           const updated = [...prev]
@@ -94,7 +93,6 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
 
       const data = await response.json()
 
-      // Atualizar status para success
       setArquivos((prev) => {
         const updated = [...prev]
         updated[index] = {
@@ -108,7 +106,6 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
 
       return data.url
     } catch (error) {
-      // Atualizar status para error
       setArquivos((prev) => {
         const updated = [...prev]
         updated[index] = {
@@ -174,6 +171,35 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       return
     }
 
+    if (!dataEncerramento) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "A data de encerramento é obrigatória",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    if (arquivos.length<=0 || arquivos.every((file) => !file.file)) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "É necessário anexar pelo menos um arquivo.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+    if (arquivos.some((file) => !file.label)) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "Todos os arquivos devem ter um rótulo.",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     if (dataEncerramento && dataEncerramento < dataPublicacao) {
       toast({
         title: "Erro ao criar edital",
@@ -184,10 +210,10 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       return
     }
 
-    if (dataCriacao && dataPublicacao < dataCriacao) {
+    if (dataPublicacao && dataPublicacao < hoje && dataPublicacao.getDate() !== hoje.getDate()) { 
       toast({
         title: "Erro ao criar edital",
-        description: "A data de publicação não pode ser anterior à data de criação",
+        description: "A data de publicação não pode ser anterior à data atual. O dia atual é permitido.",
         variant: "destructive",
       })
       setIsLoading(false)
@@ -204,11 +230,20 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       return
     }
 
+    if (!senha) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "A senha do edital é obrigatória",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     try {
       const formData = new FormData()
       const fileUrls: { url: string; rotulo: string }[] = []
 
-      // Upload dos arquivos
       for (let i = 0; i < arquivos.length; i++) {
         const { file, label } = arquivos[i]
         if (file) {
@@ -297,7 +332,7 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
                 </div>
                 <div className="space-y-2">
                   <Label>Data de Publicação</Label>
-                  <DatePicker date={dataPublicacao} setDate={setDataPublicacao} />
+                  <DatePicker date={dataPublicacao} setDate={setDataPublicacao} required />
                 </div>
                 <div className="space-y-2">
                   <Label>Data de Encerramento (opcional)</Label>

@@ -119,14 +119,18 @@ export function EditalGerenciador({ editalId }: EditalGerenciadorProps) {
               <TabsTrigger value="formulario">Formulário de Inscrição</TabsTrigger>
             </TabsList>
             <TabsContent value="edital" className="mt-4">
-              <EditalEditForm edital={edital} onEditalUpdated={handleEditalUpdated} />
+              <EditalEditForm
+                edital={{
+                  ...edital,
+                  dataCriacao: edital.dataCriacao.toISOString(),
+                  dataPublicacao: edital.dataPublicacao.toISOString(),
+                  dataEncerramento: edital.dataEncerramento.toISOString(),
+                }}
+              />
             </TabsContent>
             <TabsContent value="formulario" className="mt-4">
               {edital.formulario ? (
-                <FormularioEditForm
-                  formulario={edital.formulario}
-                  onFormularioUpdated={handleFormularioUpdated}
-                />
+                <FormularioEditForm formulario={edital.formulario} />
               ) : (
                 <div className="space-y-4">
                   <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
@@ -139,11 +143,7 @@ export function EditalGerenciador({ editalId }: EditalGerenciadorProps) {
                       </div>
                     </div>
                   </div>
-                  <FormularioForm 
-                    editalId={edital.id} 
-                    editalCodigo={edital.codigo || edital.titulo.substring(0, 10)} 
-                    onFormularioCreated={handleFormularioCreated} 
-                  />
+                  <FormularioEditForm formulario={edital.formulario} />
                 </div>
               )}
             </TabsContent>

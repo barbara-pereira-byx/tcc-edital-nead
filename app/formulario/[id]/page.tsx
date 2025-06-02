@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -38,8 +36,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       where: { id: params.id },
       data: {
         titulo,
-        dataInicio: dataInicio ? new Date(dataInicio) : null,
-        dataFim: dataFim ? new Date(dataFim) : null,
       },
     });
 
@@ -51,14 +47,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
           rotulo: campo.rotulo,
           tipo: campo.tipo,
           obrigatorio: campo.obrigatorio,
-          ordem: campo.ordem, // Atualizar a ordem
+          ordem: campo.ordem,
         },
         create: {
           id: campo.id,
           rotulo: campo.rotulo,
           tipo: campo.tipo,
           obrigatorio: campo.obrigatorio,
-          ordem: campo.ordem, // Criar com a ordem correta
+          ordem: campo.ordem,
           formularioId: params.id,
         },
       });

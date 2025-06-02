@@ -27,15 +27,20 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   const [dataFim, setDataFim] = useState<Date | undefined>(
     formulario.dataFim ? new Date(formulario.dataFim) : undefined,
   )
-  // Ajuste aqui: adiciona campo arquivoFile para armazenar o arquivo selecionado (somente para tipo 6)
-  const [campos, setCampos] = useState(
+
+  interface CampoComArquivo extends CampoFormulario {
+    arquivoFile: File | null,
+    secao: string
+  }
+  
+  const [campos, setCampos] = useState<CampoComArquivo[]>(
     formulario.campos.map((campo: any) => ({
       id: campo.id,
       rotulo: campo.rotulo,
       tipo: campo.tipo,
       obrigatorio: campo.obrigatorio,
       secao: campo.secao || "Geral",
-      arquivoFile: null as File | null, // novo campo para arquivo
+      arquivoFile: null,
     })),
   )
 
@@ -58,9 +63,13 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         obrigatorio: 1,
         secao: "Geral",
         arquivoFile: null,
+        ordem: campos.length + 1, // ou qualquer valor padrão
+        formularioId: "default-form-id", // ou "" se for vazio
+        createdAt: new Date(),
+        updatedAt: new Date(),
       },
-    ])
-  }
+    ]);
+  };
 
   const removerCampo = (index: number) => {
     const novosCampos = [...campos]

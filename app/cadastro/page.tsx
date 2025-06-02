@@ -1,15 +1,55 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
+
+// Função para validar CPF
+function isValidCPF(cpf: string) {
+  cpf = cpf.replace(/[^\d]+/g, "")
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false
+
+  let sum = 0
+  let remainder
+
+  for (let i = 1; i <= 9; i++) sum += parseInt(cpf.substring(i - 1, i)) * (11 - i)
+  remainder = (sum * 10) % 11
+  if (remainder === 10 || remainder === 11) remainder = 0
+  if (remainder !== parseInt(cpf.substring(9, 10))) return false
+
+  sum = 0
+  for (let i = 1; i <= 10; i++) sum += parseInt(cpf.substring(i - 1, i)) * (12 - i)
+  remainder = (sum * 10) % 11
+  if (remainder === 10 || remainder === 11) remainder = 0
+  if (remainder !== parseInt(cpf.substring(10, 11))) return false
+
+  return true
+}
+
+// Função para validar e-mail
+function isValidEmail(email: string) {
+  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return regex.test(email)
+}
+
+// Função para validar senha
+function isStrongPassword(password: string) {
+  const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+  return regex.test(password)
+}
+
+// Função para validar nome completo (mínimo nome + sobrenome, apenas letras e espaços)
+function isValidName(name: string) {
+  const regex = /^[A-Za-zÀ-ú\s]+$/
+  const isValidChars = regex.test(name)
+  const words = name.trim().split(/\s+/)
+  return isValidChars && words.length >= 2
+}
 
 export default function CadastroPage() {
   const router = useRouter()
@@ -25,13 +65,66 @@ export default function CadastroPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (name === "cpf") {
+      // Bloqueia entrada para mais que 11 dígitos e remove qualquer caractere que não seja número
+      if (value.length > 11) return
+      setFormData((prev) => ({ ...prev, [name]: value.replace(/\D/g, "") }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
+    // Valida nome
+    if (!isValidName(formData.nome)) {
+      toast({
+        title: "Erro no cadastro",
+        description: "Digite um nome válido com nome e sobrenome (apenas letras e espaços)",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    // Valida CPF
+    if (formData.cpf.length !== 11 || !isValidCPF(formData.cpf)) {
+      toast({
+        title: "Erro no cadastro",
+        description: "Digite um CPF válido com 11 dígitos",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    // Valida e-mail
+    if (!isValidEmail(formData.email)) {
+      toast({
+        title: "Erro no cadastro",
+        description: "Digite um e-mail válido",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    // Valida senha forte
+    if (!isStrongPassword(formData.senha)) {
+      toast({
+        title: "Erro no cadastro",
+        description:
+          "A senha deve ter no mínimo 8 caracteres, incluindo letra maiúscula, minúscula, número e caractere especial",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    // Confirmação de senha
     if (formData.senha !== formData.confirmarSenha) {
       toast({
         title: "Erro no cadastro",
@@ -43,13 +136,17 @@ export default function CadastroPage() {
     }
 
     try {
+      // Converte nome para maiúsculas antes de enviar
+      const nomeMaiusculo = formData.nome.toUpperCase()
+
+      // Primeiro: faz o cadastro do usuário
       const response = await fetch("/api/usuarios", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          nome: formData.nome,
+          nome: nomeMaiusculo,
           cpf: formData.cpf,
           email: formData.email,
           senha: formData.senha,
@@ -58,9 +155,21 @@ export default function CadastroPage() {
       })
 
       if (response.ok) {
+        // Segundo: envia e-mail de confirmação (supondo que o endpoint exista)
+        await fetch("/api/email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            nome: nomeMaiusculo,
+          }),
+        })
+
         toast({
           title: "Cadastro realizado com sucesso",
-          description: "Você já pode fazer login no sistema",
+          description: "Verifique sua caixa de e-mail para a confirmação!",
         })
         router.push("/editais")
       } else {
@@ -97,7 +206,7 @@ export default function CadastroPage() {
               <Input id="nome" name="nome" value={formData.nome} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cpf">CPF (sem traços ou pontos)</Label>
+              <Label htmlFor="cpf">CPF (somente números)</Label>
               <Input
                 id="cpf"
                 name="cpf"
@@ -105,6 +214,7 @@ export default function CadastroPage() {
                 onChange={handleChange}
                 placeholder="00000000000"
                 required
+                maxLength={11}
               />
             </div>
             <div className="space-y-2">

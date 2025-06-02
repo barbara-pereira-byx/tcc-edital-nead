@@ -47,6 +47,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
         },
       },
       arquivos: true,
+      inscricoes: true,
     },
   })
 

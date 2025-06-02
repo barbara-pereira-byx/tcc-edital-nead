@@ -8,14 +8,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const edital = await prisma.edital.findUnique({
       where: { id: params.id },
       include: {
-        secoes: {
-          include: {
-            topicos: true,
-          },
-          orderBy: {
-            id: "asc",
-          },
-        },
         formulario: {
           include: {
             campos: {
@@ -25,6 +17,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
             },
           },
         },
+        arquivos: true,
+        inscricoes: true,
       },
     })
 
@@ -63,7 +57,7 @@ export async function PUT(
 
   const editalExistente = await prisma.edital.findUnique({
     where: { id: id },
-    include: { arquivos: true },
+    include: { arquivos: true, inscricoes: true },
   })
 
   if (!editalExistente) {

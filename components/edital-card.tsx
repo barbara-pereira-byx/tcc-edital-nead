@@ -4,10 +4,28 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, Users } from "lucide-react"
-import type { Edital } from "@/lib/data"
+
+import { Edital as PrismaEdital } from "@prisma/client";
+
+export type Edital = PrismaEdital & {
+  formulario?: {
+    dataInicio?: string | Date | null;
+    dataFim?: string | Date | null;
+    inscricoes?: number;
+  };
+  _count?: {
+    formulario?: {
+      inscricoes?: number;
+    };
+  };
+};
 
 interface EditalCardProps {
   edital: Edital
+}
+
+function formatarData(data: Date): string {
+  return data.toLocaleDateString("pt-BR");
 }
 
 export function EditalCard({ edital }: EditalCardProps) {
@@ -65,7 +83,7 @@ export function EditalCard({ edital }: EditalCardProps) {
             <div className="flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4" />
               <span>
-                Inscrições: {formatarData(edital.formulario.dataInicio)} a {formatarData(edital.formulario.dataFim)}
+                Inscrições: {formatarData(new Date(edital.formulario.dataInicio))} a {formatarData(new Date(edital.formulario.dataFim))}
               </span>
             </div>
           )}

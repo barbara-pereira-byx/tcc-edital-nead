@@ -96,7 +96,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 
     // Remover campos que não estão mais presentes
-    const camposIds = campos.map((c) => c.id).filter((id) => !id.startsWith("temp-"))
+    const camposIds = campos.map((c: any) => c.id).filter((id: any) => !id.startsWith("temp-"))
     const camposParaRemover = formularioExistente.campos.filter((c) => !camposIds.includes(c.id))
 
     for (const campo of camposParaRemover) {

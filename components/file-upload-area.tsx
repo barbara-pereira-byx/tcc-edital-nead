@@ -124,7 +124,9 @@ export function FileUploadArea({ files, onAddFile, onRemoveFile, onFileChange, o
                   onClick={() => triggerFileInput(index)}
                 >
                   <input
-                    ref={(el) => (inputRefs.current[index] = el)}
+                    ref={(el) => {
+                      inputRefs.current[index] = el
+                    }}
                     type="file"
                     id={`file-upload-${index}`}
                     className="hidden"

@@ -26,7 +26,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         nome: true,
         email: true,
         cpf: true,
-        telefone: true,
         tipo: true,
       },
     })
@@ -102,7 +101,6 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         nome: true,
         email: true,
         cpf: true,
-        telefone: true,
         tipo: true,
       },
     })

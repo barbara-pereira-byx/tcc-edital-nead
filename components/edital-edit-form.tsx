@@ -18,7 +18,7 @@ interface Edital {
   senha: string
   dataCriacao: string
   dataPublicacao: string
-  dataEncerramento?: string
+  dataEncerramento: string
   arquivos: { id?: string; url: string; rotulo: string }[]
 }
 
@@ -176,7 +176,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
         senha,
         dataCriacao: dataCriacao?.toISOString() || "",
         dataPublicacao: dataPublicacao?.toISOString() || "",
-        dataEncerramento: dataEncerramento ? dataEncerramento.toISOString() : null,
+        dataEncerramento: dataEncerramento?.toISOString() || "",
         arquivos: arquivosData,
       }
 
@@ -241,7 +241,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
                   <DatePicker date={dataPublicacao} setDate={setDataPublicacao} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Data de Encerramento (opcional)</Label>
+                  <Label>Data de Encerramento</Label>
                   <DatePicker date={dataEncerramento} setDate={setDataEncerramento} />
                 </div>
                 {/* URL para Lista de Inscritos */}

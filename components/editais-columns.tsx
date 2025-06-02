@@ -11,12 +11,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Row } from '@tanstack/react-table'
+
+import { Edital as PrismaEdital } from "@prisma/client";
+
+export type EditalExtendido = PrismaEdital & {
+  formulario?: {
+    dataInicio?: string | Date | null;
+    dataFim?: string | Date | null;
+    inscricoes?: number;
+  };
+  _count?: {
+    formulario?: {
+      inscricoes?: number;
+    };
+  };
+};
 
 export const columns = [
   {
     accessorKey: "titulo",
     header: "Título",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       return (
         <div className="max-w-[500px] truncate font-medium">
@@ -30,7 +46,7 @@ export const columns = [
   {
     accessorKey: "dataPublicacao",
     header: "Data de Publicação",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const date = new Date(row.getValue("dataPublicacao"))
       return <div>{date.toLocaleDateString("pt-BR")}</div>
     },
@@ -38,7 +54,7 @@ export const columns = [
   {
     accessorKey: "dataEncerramento",
     header: "Data de Encerramento",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const value = row.getValue("dataEncerramento")
       if (!value) return <div>Não definida</div>
       const date = new Date(value as string)
@@ -48,7 +64,7 @@ export const columns = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       const hoje = new Date()
       const dataInicio = edital.formulario?.dataInicio ? new Date(edital.formulario.dataInicio) : null
@@ -83,7 +99,7 @@ export const columns = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
 
       return (

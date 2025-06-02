@@ -38,7 +38,7 @@ model Edital {
   titulo            String
   dataCriacao       DateTime            @default(now())
   dataPublicacao    DateTime
-  dataEncerramento  DateTime?
+  dataEncerramento  DateTime
   formulario        Formulario?
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
@@ -73,6 +73,7 @@ model CampoFormulario {
   rotulo            String
   tipo              Int                 // 0: texto, 1: textarea, 2: radio, 3: select, 4: checkbox, 5: data, 6: arquivo
   obrigatorio       Int                 // 0: não, 1: sim
+  ordem             Int?
   formulario        Formulario          @relation(fields: [formularioId], references: [id], onDelete: Cascade)
   formularioId      String
   respostas         FormularioUsuarioCampo[]

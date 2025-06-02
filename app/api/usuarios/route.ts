@@ -68,7 +68,6 @@ export async function GET(req: Request) {
         nome: true,
         email: true,
         cpf: true,
-        telefone: true,
         tipo: true,
       },
       orderBy: {

@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Row } from '@tanstack/react-table'
 import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -25,12 +26,26 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
+import { Edital as PrismaEdital } from "@prisma/client";
+
+export type EditalExtendido = PrismaEdital & {
+  formulario?: {
+    dataInicio?: string | Date | null;
+    dataFim?: string | Date | null;
+    inscricoes?: number;
+  };
+  _count?: {
+    formulario?: {
+      inscricoes?: number;
+    };
+  };
+};
 
 export const columns = [
   {
     accessorKey: "titulo",
     header: "Título",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       return (
         <div className="max-w-[500px] truncate font-medium">
@@ -48,15 +63,15 @@ export const columns = [
   {
     accessorKey: "dataPublicacao",
     header: "Data de Publicação",
-    cell: ({ row }) => {
-      const date = row.getValue("dataPublicacao")
-      return <div>{date ? new Date(date).toLocaleDateString("pt-BR") : "Data não disponível"}</div>
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
+      const date = row.getValue("dataPublicacao") as string | number | Date | null | undefined;
+      return <div>{date ? new Date(date).toLocaleDateString("pt-BR") : "Data não disponível"}</div>;
     },
   },
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       const hoje = new Date()
       const dataInicio = edital?.formulario?.dataInicio ? new Date(edital.formulario.dataInicio) : null
@@ -88,7 +103,7 @@ export const columns = [
   {
     accessorKey: "inscricoes",
     header: "Inscrições",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       const count = edital?._count?.formulario?.inscricoes || 0
       return <div className="text-center">{count}</div>
@@ -96,7 +111,7 @@ export const columns = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row }: { row: Row<EditalExtendido> }) => {
       const edital = row.original
       const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
       const router = useRouter()

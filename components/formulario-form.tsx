@@ -9,18 +9,22 @@ import { Label } from "@/components/ui/label"
 import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
 import { PlusCircle, Trash2, MoveUp, MoveDown } from "lucide-react"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 
 interface FormularioFormProps {
   editalId?: string
   onFormularioCreated?: (formularioId: string) => void
+}
+
+interface Campo {
+  id: string
+  nome: string
+  tipo: string
+  obrigatorio: boolean
+  tamanho: string
+  opcoes: string
+  ordem: number
 }
 
 export function FormularioForm({ editalId, onFormularioCreated }: FormularioFormProps) {
@@ -31,24 +35,25 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   const [titulo, setTitulo] = useState("")
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
-  const [campos, setCampos] = useState([
+  const [formularioId, setFormularioId] = useState<string | undefined>(undefined)
+  const [campos, setCampos] = useState<Campo[]>([
     {
       id: "1",
       nome: "Nome Completo",
       tipo: "0",
       obrigatorio: true,
-      categoria: "Dados Pessoais",
       tamanho: "100",
       opcoes: "",
+      ordem: 1,
     },
     {
       id: "2",
       nome: "E-mail",
       tipo: "0",
       obrigatorio: true,
-      categoria: "Dados Pessoais",
       tamanho: "100",
       opcoes: "",
+      ordem: 2,
     },
   ])
 
@@ -59,14 +64,6 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     { valor: "4", nome: "Checkbox" },
     { valor: "5", nome: "Data" },
     { valor: "6", nome: "Arquivo" },
-  ]
-
-  const categorias = [
-    "Dados Pessoais",
-    "Formação Acadêmica",
-    "Experiência Profissional",
-    "Documentos",
-    "Outros",
   ]
 
   useEffect(() => {
@@ -96,7 +93,10 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
               titulo: tituloEdital,
               dataInicio: dataInicioEdital,
               dataFim: dataFimEdital,
-              campos,
+              campos: campos.map((c) => ({
+                ...c,
+                ordem: c.ordem || 0,
+              })),
               editalId,
             }),
           })
@@ -111,7 +111,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
             title: "Formulário criado automaticamente",
             description: "Você pode agora personalizá-lo.",
           })
-
+          setFormularioId(data.id)
           setFormularioCriado(true)
           if (onFormularioCreated) onFormularioCreated(data.id)
         }
@@ -129,16 +129,18 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   }, [editalId, formularioCriado])
 
   const adicionarCampo = () => {
+    const maiorOrdem = Math.max(...campos.map((c) => c.ordem), 0)
+
     setCampos([
       ...campos,
       {
-        id: `${campos.length + 1}`,
+        id: `temp-${Date.now()}`,
         nome: "",
         tipo: "0",
         obrigatorio: true,
-        categoria: "Dados Pessoais",
         tamanho: "100",
         opcoes: "",
+        ordem: maiorOrdem + 1,
       },
     ])
   }
@@ -146,25 +148,45 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   const removerCampo = (index: number) => {
     const novosCampos = [...campos]
     novosCampos.splice(index, 1)
-    setCampos(novosCampos)
+
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const moverCampoParaCima = (index: number) => {
     if (index === 0) return
+
     const novosCampos = [...campos]
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index - 1]
     novosCampos[index - 1] = temp
-    setCampos(novosCampos)
+
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const moverCampoParaBaixo = (index: number) => {
     if (index === campos.length - 1) return
+
     const novosCampos = [...campos]
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index + 1]
     novosCampos[index + 1] = temp
-    setCampos(novosCampos)
+
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,7 +195,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
 
     if (!titulo.trim()) {
       toast({
-        title: "Erro ao criar formulário",
+        title: "Erro ao salvar formulário",
         description: "O título do formulário é obrigatório",
         variant: "destructive",
       })
@@ -183,7 +205,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
 
     if (!dataInicio || !dataFim) {
       toast({
-        title: "Erro ao criar formulário",
+        title: "Erro ao salvar formulário",
         description: "As datas de início e fim são obrigatórias",
         variant: "destructive",
       })
@@ -193,7 +215,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
 
     if (dataFim < dataInicio) {
       toast({
-        title: "Erro ao criar formulário",
+        title: "Erro ao salvar formulário",
         description: "A data de fim deve ser posterior à data de início",
         variant: "destructive",
       })
@@ -203,7 +225,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
 
     if (campos.length === 0) {
       toast({
-        title: "Erro ao criar formulário",
+        title: "Erro ao salvar formulário",
         description: "O formulário deve ter pelo menos um campo",
         variant: "destructive",
       })
@@ -214,7 +236,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     for (const campo of campos) {
       if (!campo.nome.trim()) {
         toast({
-          title: "Erro ao criar formulário",
+          title: "Erro ao salvar formulário",
           description: "Todos os campos devem ter um nome",
           variant: "destructive",
         })
@@ -224,39 +246,159 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     }
 
     try {
-      const response = await fetch("/api/formularios", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          titulo,
-          dataInicio,
-          dataFim,
-          campos,
-          editalId,
-        }),
-      })
+      const camposOrdenados = campos.map((campo, index) => ({
+        ...campo,
+        ordem: index + 1,
+      }))
 
-      if (response.ok) {
-        const data = await response.json()
-        toast({
-          title: "Formulário criado com sucesso",
-          description: "O formulário foi criado e está pronto para receber inscrições",
-        })
-      } else {
-        const error = await response.json()
-        toast({
-          title: "Erro ao criar formulário",
-          description: error.message || "Ocorreu um erro ao tentar criar o formulário",
-          variant: "destructive",
-        })
+      let response
+      let isUpdate = false
+
+      // Se formularioId existe, tentar atualizar, mas estar preparado para criar novo se não existir
+      if (formularioId) {
+        console.log(`Tentando atualizar formulário com ID: ${formularioId}`)
+
+        try {
+          // Verificar se o formulário ainda existe
+          const checkResponse = await fetch(`/api/formularios/${formularioId}`)
+
+          if (checkResponse.ok) {
+            isUpdate = true
+            console.log("Formulário encontrado, prosseguindo com atualização")
+
+            // Mapear campos para o formato esperado pela API de atualização
+            const camposParaAPI = camposOrdenados.map((campo) => ({
+              id: campo.id,
+              rotulo: campo.nome, // API de atualização espera 'rotulo'
+              tipo: Number.parseInt(campo.tipo),
+              obrigatorio: campo.obrigatorio ? 1 : 0,
+              ordem: campo.ordem,
+            }))
+
+            response = await fetch(`/api/formularios/${formularioId}`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                titulo,
+                dataInicio,
+                dataFim,
+                campos: camposParaAPI,
+              }),
+            })
+            
+            // Processar resposta
+            if (response.ok) {
+              const data = await response.json()
+              console.log("Resposta da API:", data)
+
+              toast({
+                title: `Formulário ${isUpdate ? "atualizado" : "criado"} com sucesso`,
+                description: `O formulário foi ${isUpdate ? "atualizado" : "criado"} e está pronto para receber inscrições`,
+              })
+
+              // Se foi uma criação, armazenar o ID
+              if (!isUpdate && data.id) {
+                setFormularioId(data.id)
+                setFormularioCriado(true)
+              }
+
+              router.push("/gerenciar")
+            } else {
+              const error = await response.json()
+              console.error("Erro na resposta da API:", error)
+
+              toast({
+                title: "Erro ao salvar formulário",
+                description: error.message || "Ocorreu um erro ao tentar salvar o formulário",
+                variant: "destructive",
+              })}
+            } else {
+              // Formulário não existe, vamos criar um novo
+              console.log("Formulário não encontrado (404), criando um novo")
+              isUpdate = false
+              setFormularioId(undefined)
+
+              // Continuar para o bloco de criação abaixo
+              throw new Error("Formulário não encontrado")
+            }
+        } catch (error) {
+          console.log("Erro ao verificar/atualizar formulário, tentando criar novo:", error)
+          isUpdate = false
+          // Continuar para o bloco de criação abaixo
+        }
       }
+
+      // Se não estamos atualizando (seja porque não tínhamos ID ou porque o formulário não existe mais)
+      if (!isUpdate) {
+        // Verificar se temos editalId
+        if (!editalId) {
+          toast({
+            title: "Erro ao salvar formulário",
+            description: "É necessário um ID de edital para criar um formulário",
+            variant: "destructive",
+          })
+          setIsLoading(false)
+          return
+        }
+
+        console.log(`Criando novo formulário para edital: ${editalId}`)
+
+        // Fazer POST (criação)
+        response = await fetch("/api/formularios", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            titulo,
+            dataInicio,
+            dataFim,
+            campos: camposOrdenados.map((campo) => ({
+              nome: campo.nome,
+              tipo: campo.tipo,
+              obrigatorio: campo.obrigatorio,
+              ordem: campo.ordem,
+            })),
+            editalId,
+          }),
+        })
+        // Processar resposta
+        if (response.ok) {
+          const data = await response.json()
+          console.log("Resposta da API:", data)
+
+          toast({
+            title: `Formulário ${isUpdate ? "atualizado" : "criado"} com sucesso`,
+            description: `O formulário foi ${isUpdate ? "atualizado" : "criado"} e está pronto para receber inscrições`,
+          })
+
+          // Se foi uma criação, armazenar o ID
+          if (!isUpdate && data.id) {
+            setFormularioId(data.id)
+            setFormularioCriado(true)
+          }
+
+          router.push("/gerenciar")
+        } else {
+          const error = await response.json()
+          console.error("Erro na resposta da API:", error)
+
+          toast({
+            title: "Erro ao salvar formulário",
+            description: error.message || "Ocorreu um erro ao tentar salvar o formulário",
+            variant: "destructive",
+          })
+        }
+      }
+
+      
     } catch (error) {
-      console.error("Erro ao criar formulário:", error)
+      console.error("Erro ao salvar formulário:", error)
       toast({
-        title: "Erro ao criar formulário",
-        description: "Ocorreu um erro ao tentar criar o formulário",
+        title: "Erro ao salvar formulário",
+        description: "Ocorreu um erro ao tentar salvar o formulário",
         variant: "destructive",
       })
     } finally {
@@ -288,6 +430,14 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
         </div>
       </div>
 
+      {/* Mostrar informações sobre o estado do formulário */}
+      {editalId && (
+        <div className="p-2 bg-gray-50 rounded-md text-sm text-gray-600">
+          Este formulário será associado ao Edital ID: {editalId}
+          {formularioId && <span className="block mt-1">Formulário ID: {formularioId} (modo edição)</span>}
+        </div>
+      )}
+
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Campos do Formulário</h3>
@@ -296,7 +446,10 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
         {campos.map((campo, index) => (
           <div key={campo.id} className="border rounded-md p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">Campo #{index + 1}</h4>
+              <h4 className="font-medium">
+                Campo #{String(index + 1).padStart(3, "0")}
+                <span className="text-sm text-gray-500 ml-2">(Ordem: {campo.ordem})</span>
+              </h4>
               <div className="flex items-center space-x-1">
                 <Button
                   type="button"
@@ -304,6 +457,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
                   size="icon"
                   onClick={() => moverCampoParaCima(index)}
                   disabled={index === 0}
+                  title="Mover para cima"
                 >
                   <MoveUp className="h-4 w-4" />
                 </Button>
@@ -313,6 +467,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
                   size="icon"
                   onClick={() => moverCampoParaBaixo(index)}
                   disabled={index === campos.length - 1}
+                  title="Mover para baixo"
                 >
                   <MoveDown className="h-4 w-4" />
                 </Button>
@@ -322,6 +477,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
                   size="icon"
                   onClick={() => removerCampo(index)}
                   disabled={campos.length <= 2}
+                  title="Remover campo"
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
@@ -368,36 +524,13 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor={`categoria-${index}`}>Categoria</Label>
-                <Select
-                  value={campo.categoria}
-                  onValueChange={(value) => {
-                    const novosCampos = [...campos]
-                    novosCampos[index].categoria = value
-                    setCampos(novosCampos)
-                  }}
-                >
-                  <SelectTrigger id={`categoria-${index}`}>
-                    <SelectValue placeholder="Selecione a categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categorias.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="flex items-center space-x-2">
                 <Switch
                   id={`obrigatorio-${index}`}
                   checked={campo.obrigatorio}
                   onCheckedChange={(checked) => {
                     const novosCampos = [...campos]
-                    novosCampos[index].obrigatorio = checked as boolean
+                    novosCampos[index].obrigatorio = checked
                     setCampos(novosCampos)
                   }}
                 />
@@ -450,18 +583,10 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
       </div>
 
       <div className="flex justify-end">
-        <Button
-        type="submit"
-        disabled={isLoading}
-        onClick={() => {
-          if (!isLoading) {
-            router.push("/gerenciar");
-          }
-        }}
-      >
-        {isLoading ? "Salvando..." : "Criar Formulário"}
-      </Button>
-    </div>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Salvando..." : formularioId ? "Atualizar Formulário" : "Criar Formulário"}
+        </Button>
+      </div>
     </form>
   )
 }

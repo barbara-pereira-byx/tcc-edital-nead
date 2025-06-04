@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       data: {
         titulo,
         dataPublicacao: new Date(dataPublicacao),
-        dataEncerramento: dataEncerramento ? new Date(dataEncerramento) : null,
+        dataEncerramento: dataEncerramento ? new Date(dataEncerramento) : '',
         senha,
         arquivos: { // Use a notação correta para criar arquivos relacionados
           create: arquivos.map((file) => ({

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { CancelInscricaoButton } from "@/components/cancel-inscricao-button"
 
 export default async function InscricaoDetalhesPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
@@ -16,7 +17,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     redirect("/login")
   }
 
-  // Buscar a inscrição com todos os detalhes
   const inscricao = await prisma.formularioUsuario.findUnique({
     where: { id: params.id },
     include: {
@@ -39,7 +39,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     notFound()
   }
 
-  // Verificar se o usuário tem permissão para ver esta inscrição
   const isAdmin = session.user.tipo === 1
   const isOwner = inscricao.usuarioId === session.user.id
 
@@ -47,7 +46,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     redirect("/inscricoes")
   }
 
-  // Formatar data
   const formatarData = (data: Date) => {
     return new Date(data).toLocaleDateString("pt-BR", {
       day: "2-digit",
@@ -145,9 +143,11 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
                 <Button variant="outline" asChild>
                   <Link href={`/editais/${inscricao.formulario.edital.id}`}>Ver Edital Completo</Link>
                 </Button>
-                <Button variant="destructive" asChild>
-                  <Link href={`/inscricoes/${inscricao.id}/cancelar`}>Cancelar Inscrição</Link>
-                </Button>
+                <div className="flex justify-end gap-4">
+                  {isOwner && (
+                    <CancelInscricaoButton inscricaoId={inscricao.id} />
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -11,6 +11,7 @@ import { Loader2 } from "lucide-react"
 export default function AjustarSenhaPage() {
   const searchParams = useSearchParams()
   const email = searchParams.get("email") || ""
+  const nome = searchParams.get("nome") || "Usuário" // Nome opcional na URL
   const { toast } = useToast()
   const [novaSenha, setNovaSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
@@ -29,20 +30,38 @@ export default function AjustarSenhaPage() {
 
     setLoading(true)
 
-    const res = await fetch("/api/ajustar-senha", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, novaSenha }),
-    })
+    try {
+      const res = await fetch("/api/ajustar-senha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, novaSenha }),
+      })
 
-    if (res.ok) {
-      toast({ title: "Senha atualizada com sucesso" })
-    } else {
-      const { message } = await res.json()
-      toast({ title: message || "Erro ao atualizar senha", variant: "destructive" })
+      if (res.ok) {
+        toast({ title: "Senha atualizada com sucesso" })
+
+        // Chamada para envio de e-mail de confirmação
+        await fetch("/api/ajustar-senha/confirmacao", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, nome }),
+        })
+      } else {
+        const { message } = await res.json()
+        toast({
+          title: message || "Erro ao enviar e-mail de confirmação",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   return (

@@ -101,7 +101,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
 
   // Status do edital para exibição
   const getStatusEdital = () => {
-    if (jaInscrito) return { label: "Inscrito", variant: "success", icon: CheckCircle }
+    if (jaInscrito && inscricao.status === 'ATIVO') return { label: "Inscrito", variant: "success", icon: CheckCircle }
     if (periodoInscricoesAberto) return { label: "Inscrições Abertas", variant: "default", icon: null }
     if (dataInicio && hoje < dataInicio) return { label: "Inscrições em Breve", variant: "warning", icon: Clock }
     return { label: "Inscrições Encerradas", variant: "secondary", icon: null }
@@ -178,7 +178,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
           <Tabs defaultValue="anexos" className="space-y-4">
             <TabsList className="bg-white border border-slate-200 p-1 rounded-lg">
               <TabsTrigger value="anexos" className="rounded-md data-[state=active]:bg-slate-100">
-                Anexos do Edital
+                Arquivos do Edital
               </TabsTrigger>
               <TabsTrigger value="formulario" className="rounded-md data-[state=active]:bg-slate-100">
                 {isAdmin ? "Campos do Formulário" : jaInscrito ? "Minha Inscrição" : "Formulário de Inscrição"}
@@ -193,9 +193,9 @@ export default async function EditalPage({ params }: { params: { id: string } })
               <Card>
                 <CardContent className="p-6 space-y-6">
 
-                  {/* Lista de anexos */}
+                  {/* Lista de Arquivos */}
                   <div>
-                    <h2 className="text-xl font-semibold mb-4">Anexos</h2>
+                    <h2 className="text-xl font-semibold mb-4">Arquivos</h2>
 
                     {edital.arquivos && edital.arquivos.length > 0 ? (
                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -271,7 +271,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
                         </Alert>
                       )}
                     </>
-                  ) : jaInscrito ? (
+                  ) : inscricao.status === 'ATIVO' ? (
                     // Usuário já inscrito
                     <div className="text-center py-8">
                       <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />

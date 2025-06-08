@@ -145,7 +145,6 @@ export default function ClientMenu() {
           </form>
         </CardContent>
         <CardFooter className="bg-slate-50 p-4 flex flex-col items-center">
-          <p className="text-sm text-slate-600 mb-2">Não tem uma conta?</p>
           <Link
             href="/cadastro"
             className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center transition-colors"
@@ -153,6 +152,13 @@ export default function ClientMenu() {
             <UserPlus className="mr-1 h-4 w-4" /> Cadastre-se agora
             <ChevronRight className="ml-1 h-4 w-4" />
           </Link>
+            <Link
+              href="/recuperar-senha"
+              className="p-2 text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center transition-colors"
+            >
+              <Lock className="mr-1 h-4 w-4" /> Esqueci minha senha
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Link>
         </CardFooter>
       </Card>
     )

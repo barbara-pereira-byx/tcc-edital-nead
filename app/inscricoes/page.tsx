@@ -8,6 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { FileText, ClipboardCheck } from "lucide-react"
+import {
+  ChevronLeft,
+  FileIcon as FilePdf,
+} from "lucide-react"
 
 type Inscricao = {
   id: string
@@ -57,14 +61,17 @@ export default async function InscricoesPage() {
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
+          <div className="flex gap-4 mb-4">
+            <Link
+              href="/editais"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para editais
+            </Link>
+          </div>
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Minhas Inscrições</h1>
-            <Link href="/editais">
-              <Button>
-                <FileText className="mr-2 h-4 w-4" />
-                Ver Editais Disponíveis
-              </Button>
-            </Link>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 mb-6">
@@ -107,7 +114,9 @@ export default async function InscricoesPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <CardTitle>{inscricao.formulario.edital.titulo}</CardTitle>
-                      <Badge>Inscrito</Badge>
+                      <Badge className="self-start md:self-auto">
+                        {inscricao.status === 'CANCELADO' ? 'CANCELADO' : 'ATIVO'}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>

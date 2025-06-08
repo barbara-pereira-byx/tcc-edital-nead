@@ -90,9 +90,16 @@ model FormularioUsuario {
   formularioId      String
   campos            FormularioUsuarioCampo[]
   arquivos          ArquivoUsuario[]        // Relação com os arquivos enviados pelo usuário
+  status            StatusInscricao         @default(ATIVO)
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
 }
+
+enum StatusInscricao {
+  ATIVO
+  CANCELADO
+}
+
 
 model FormularioUsuarioCampo {
   id                String              @id @default(cuid())

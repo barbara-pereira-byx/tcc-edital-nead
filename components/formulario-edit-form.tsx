@@ -11,7 +11,7 @@ import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
 import { PlusCircle, Trash2, MoveUp, MoveDown } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { CampoFormulario } from "@prisma/client"
+import type { CampoFormulario } from "@prisma/client"
 
 interface FormularioEditFormProps {
   formulario: any
@@ -29,19 +29,25 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   )
 
   interface CampoComArquivo extends CampoFormulario {
-    arquivoFile: File | null,
+    arquivoFile: File | null
     secao: string
   }
-  
+
   const [campos, setCampos] = useState<CampoComArquivo[]>(
-    formulario.campos.map((campo: any) => ({
-      id: campo.id,
-      rotulo: campo.rotulo,
-      tipo: campo.tipo,
-      obrigatorio: campo.obrigatorio,
-      secao: campo.secao || "Geral",
-      arquivoFile: null,
-    })),
+    formulario.campos
+      .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0)) // Ordenar pelos campos existentes
+      .map((campo: any, index: number) => ({
+        id: campo.id,
+        rotulo: campo.rotulo,
+        tipo: campo.tipo,
+        obrigatorio: campo.obrigatorio,
+        secao: campo.secao || "Geral",
+        arquivoFile: null,
+        ordem: campo.ordem || index + 1, // Usar ordem existente ou índice + 1
+        formularioId: campo.formularioId,
+        createdAt: campo.createdAt,
+        updatedAt: campo.updatedAt,
+      })),
   )
 
   const tiposCampo = [
@@ -54,45 +60,75 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   ]
 
   const adicionarCampo = () => {
+    // Encontrar a maior ordem atual e adicionar 1
+    const maiorOrdem = Math.max(...campos.map((c) => c.ordem || 0), 0)
+
     setCampos([
       ...campos,
       {
-        id: `temp-${campos.length + 1}`,
+        id: `temp-${Date.now()}`, // Usar timestamp para evitar conflitos
         rotulo: "",
         tipo: 0,
         obrigatorio: 1,
         secao: "Geral",
         arquivoFile: null,
-        ordem: campos.length + 1, // ou qualquer valor padrão
-        formularioId: "default-form-id", // ou "" se for vazio
+        ordem: maiorOrdem + 1,
+        formularioId: formulario.id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ]);
-  };
+    ])
+  }
 
   const removerCampo = (index: number) => {
     const novosCampos = [...campos]
     novosCampos.splice(index, 1)
-    setCampos(novosCampos)
+
+    // Reordenar todos os campos após remoção
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const moverCampoParaCima = (index: number) => {
     if (index === 0) return
+
     const novosCampos = [...campos]
+
+    // Trocar as posições no array
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index - 1]
     novosCampos[index - 1] = temp
-    setCampos(novosCampos)
+
+    // Atualizar a ordem baseada na nova posição
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const moverCampoParaBaixo = (index: number) => {
     if (index === campos.length - 1) return
+
     const novosCampos = [...campos]
+
+    // Trocar as posições no array
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index + 1]
     novosCampos[index + 1] = temp
-    setCampos(novosCampos)
+
+    // Atualizar a ordem baseada na nova posição
+    const camposReordenados = novosCampos.map((campo, i) => ({
+      ...campo,
+      ordem: i + 1,
+    }))
+
+    setCampos(camposReordenados)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,8 +179,13 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
     }
 
     try {
-      // Se quiser enviar arquivos, precisa usar FormData e ajustar backend para multipart/form-data.
-      // Aqui envio só JSON sem arquivos para manter compatibilidade, mas você pode adaptar:
+      // Garantir que os campos estão com ordem sequencial correta
+      const camposOrdenados = campos.map((campo, index) => ({
+        ...campo,
+        ordem: index + 1,
+      }))
+
+      // Enviar os dados, excluindo arquivoFile do JSON
       const response = await fetch(`/api/formularios/${formulario.id}`, {
         method: "PUT",
         headers: {
@@ -154,7 +195,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           titulo,
           dataInicio,
           dataFim,
-          campos: campos.map(({ arquivoFile, ...rest }) => rest), // exclui arquivoFile do JSON
+          campos: camposOrdenados.map(({ arquivoFile, ...rest }) => rest),
         }),
       })
 
@@ -214,7 +255,10 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         {campos.map((campo: CampoFormulario & { arquivoFile?: File | null }, index: number) => (
           <div key={campo.id} className="border rounded-md p-4 space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold">Campo #{String(index + 1).padStart(3, "0")}</h4>
+              <h4 className="font-semibold">
+                Campo #{String(index + 1).padStart(3, "0")}
+                <span className="text-sm text-gray-500 ml-2">(Ordem: {campo.ordem})</span>
+              </h4>
               <div className="flex items-center ml-2 space-x-1">
                 <Button
                   type="button"
@@ -222,6 +266,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   size="icon"
                   onClick={() => moverCampoParaCima(index)}
                   disabled={index === 0}
+                  title="Mover para cima"
                 >
                   <MoveUp className="h-4 w-4" />
                 </Button>
@@ -231,6 +276,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   size="icon"
                   onClick={() => moverCampoParaBaixo(index)}
                   disabled={index === campos.length - 1}
+                  title="Mover para baixo"
                 >
                   <MoveDown className="h-4 w-4" />
                 </Button>
@@ -239,6 +285,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => removerCampo(index)}
+                  title="Remover campo"
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>

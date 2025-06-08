@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { put } from '@vercel/blob';
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
+import { existsSync } from "fs";
+import { put } from "@vercel/blob";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -43,22 +46,56 @@ export async function POST(request: NextRequest) {
     const fileName = `${timestamp}-${originalName}`;
 
     try {
-      // Usar S3 diretamente para upload
-      console.log("Iniciando upload para S3");
+      // Em ambiente de produção, usar Vercel Blob
+      if (process.env.VERCEL === '1') {
+        console.log("Usando Vercel Blob para armazenamento");
+        
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+          console.error("Token do Vercel Blob não configurado");
+          return NextResponse.json({ 
+            error: "Configuração de armazenamento incompleta" 
+          }, { status: 500 });
+        }
+        
+        try {
+          const blob = await put(`editais/${fileName}`, file, {
+            access: 'public',
+          });
+          
+          console.log("Upload para Vercel Blob concluído:", blob.url);
+          
+          return NextResponse.json({
+            url: blob.url,
+            label: label,
+            fileName: file.name
+          });
+        } catch (blobError: any) {
+          console.error("Erro no Vercel Blob:", blobError);
+          return NextResponse.json({ 
+            error: `Erro no armazenamento: ${blobError.message}` 
+          }, { status: 500 });
+        }
+      }
       
-      // Usar o AWS SDK para fazer upload diretamente para o S3
-      // Isso contorna o problema do Vercel Blob
-      const blob = await put(fileName, file, {
-        access: 'public',
-        addRandomSuffix: false,
-      });
+      // Em ambiente de desenvolvimento, salvar no sistema de arquivos local
+      console.log("Salvando arquivo localmente");
+      const uploadDir = join(process.cwd(), "public", "uploads");
       
-      console.log("Upload para S3 concluído com sucesso:", blob.url);
+      if (!existsSync(uploadDir)) {
+        await mkdir(uploadDir, { recursive: true });
+      }
+
+      const filePath = join(uploadDir, fileName);
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      await writeFile(filePath, buffer);
       
+      const relativePath = `/uploads/${fileName}`;
       return NextResponse.json({
-        url: blob.url,
+        url: relativePath,
         label: label,
-        fileName: file.name,
+        fileName: file.name
       });
     } catch (uploadError: any) {
       console.error("Erro detalhado no upload:", uploadError);

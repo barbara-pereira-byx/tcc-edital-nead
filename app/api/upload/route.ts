@@ -47,58 +47,40 @@ export async function POST(request: NextRequest) {
     const originalName = file.name.replace(/\s+/g, "-").toLowerCase();
     const fileName = `${timestamp}-${originalName}`;
 
-    // Verificar se deve usar Vercel Blob ou sistema de arquivos local
-    if (isVercelBlobAvailable()) {
-      console.log("Usando Vercel Blob para upload");
-      const { put } = await import("@vercel/blob");
-      
-      // Verificar explicitamente o token antes de tentar o upload
-      if (!process.env.BLOB_READ_WRITE_TOKEN) {
-        console.error("Token do Vercel Blob não encontrado");
-        return NextResponse.json({ error: "Configuração do servidor incompleta" }, { status: 500 });
-      }
-
-      // Tente fazer o upload e capture qualquer erro
-      try {
-        console.log("Iniciando upload para Vercel Blob");
-        const blob = await put(`editais/${fileName}`, file, {
-          access: "public",
-          token: process.env.BLOB_READ_WRITE_TOKEN,
-        });
-
-        console.log("Upload para Vercel Blob concluído com sucesso:", blob.url);
-        return NextResponse.json({
-          url: blob.url,
-          label: label,
-          fileName: file.name,
-        });
-      } catch (blobError) {
-        console.error("Erro ao fazer upload para Vercel Blob:", blobError);
-        return NextResponse.json({ error: `Erro ao fazer upload para Vercel Blob: ${blobError.message}` }, { status: 500 });
-      }
-    } else {
-      // Usar sistema de arquivos local em desenvolvimento
-      const uploadDir = join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true });
-      }
-
-      const filePath = join(uploadDir, fileName);
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      await writeFile(filePath, buffer);
-
-      const relativePath = `/uploads/${fileName}`;
-
-      return NextResponse.json({
-        url: relativePath,
-        label: label,
-        fileName: file.name,
-      });
+    // Usar sistema de arquivos local para todos os ambientes temporariamente
+    // até resolver o problema com o Vercel Blob
+    console.log("Usando sistema de arquivos local para upload");
+    
+    // Criar diretório de uploads se não existir
+    const uploadDir = join(process.cwd(), "public", "uploads");
+    if (!existsSync(uploadDir)) {
+      await mkdir(uploadDir, { recursive: true });
     }
+
+    const filePath = join(uploadDir, fileName);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+
+    await writeFile(filePath, buffer);
+
+    // Em produção, os arquivos estáticos são servidos da pasta .next/static
+    const relativePath = `/uploads/${fileName}`;
+    
+    return NextResponse.json({
+      url: relativePath,
+      label: label,
+      fileName: file.name,
+    });
   } catch (error) {
     console.error("Erro ao fazer upload do arquivo:", error);
     return NextResponse.json({ error: "Falha ao processar o upload do arquivo" }, { status: 500 });
   }
+}
+
+// Configuração para o limite de tamanho do corpo da requisição
+export const config = {
+  api: {
+    bodyParser: false,
+    responseLimit: '10mb',
+  },
 }

@@ -43,6 +43,8 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
   const { toast } = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
   const [editalToDelete, setEditalToDelete] = useState<string | null>(null)
+  const [editalToEncerrar, setEditalToEncerrar] = useState<string | null>(null)
+
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("pt-BR")
@@ -95,6 +97,41 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
     }
   }
 
+  const handleEncerrar = async (id: string) => {
+    try {
+      const response = await fetch(`/api/editais/${id}/encerrar`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ dataEncerramento: new Date().toISOString() }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Edital encerrado",
+          description: "O edital foi encerrado com sucesso",
+        });
+        router.refresh();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Erro ao encerrar edital",
+          description: error.message || "Ocorreu um erro ao tentar encerrar o edital",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao encerrar edital",
+        description: "Ocorreu um erro ao tentar encerrar o edital",
+        variant: "destructive",
+      });
+    } finally {
+      setEditalToEncerrar(null);
+    }
+  };
+
   return (
     <div>
       {editais.length === 0 ? (
@@ -113,7 +150,6 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
               <TableHead>Publicação</TableHead>
               <TableHead>Encerramento</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Inscrições</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -129,17 +165,45 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
                   <TableCell>
                     <Badge className={status.color}>{status.label}</Badge>
                   </TableCell>
-                  <TableCell>{edital.inscricoes?.length ?? 0}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
-                      <Button variant="outline" size="icon" asChild>
+                      {/* Botão Editar */}
+                      <Button variant="outline" size="icon" title="Editar edital" asChild>
                         <Link href={`/gerenciar/${edital.id}`}>
                           <Edit className="h-4 w-4" />
                         </Link>
                       </Button>
+
+                      {/* Botão Encerrar */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="icon" onClick={() => setEditalToDelete(edital.id)}>
+                          <Button variant="outline" size="icon" title="Encerrar edital" onClick={() => setEditalToEncerrar(edital.id)}>
+                            <span className="text-yellow-600 font-bold">❌</span>
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Encerrar Edital</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Deseja mesmo encerrar o edital? Após encerrado, não será possível receber novas inscrições.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleEncerrar(edital.id)}
+                              className="bg-yellow-600 hover:bg-yellow-700"
+                            >
+                              Encerrar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* Botão Excluir */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="icon" title="Excluir edital" onClick={() => setEditalToDelete(edital.id)}>
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </AlertDialogTrigger>

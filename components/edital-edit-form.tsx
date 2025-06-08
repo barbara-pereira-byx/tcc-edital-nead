@@ -288,11 +288,30 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
                       onChange={(e) => setSenha(e.target.value)}
                       required
                     />
-                    <Button type="button" onClick={() => setIsPasswordVisible(!isPasswordVisible)} className="ml-2">
+                    <Button
+                      type="button"
+                      onClick={() => setIsPasswordVisible(!isPasswordVisible)}
+                      className="ml-2"
+                    >
                       {isPasswordVisible ? <EyeOff /> : <Eye />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-2"
+                      onClick={() => {
+                        navigator.clipboard.writeText(senha);
+                        toast({
+                          title: "Senha copiada",
+                          description: "A senha foi copiada para a área de transferência",
+                        });
+                      }}
+                    >
+                      Copiar
                     </Button>
                   </div>
                 </div>
+
               </div>
             </div>
 

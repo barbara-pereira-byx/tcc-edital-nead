@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent } from "@/components/ui/card"
 import { ListaInscritos } from "@/components/lista-inscritos"
 import { SenhaEditalForm } from "@/components/senha-edital-form"
-import { cookies } from "next/headers"
 import { createHash } from "crypto"
 
 export default async function InscritosPage({
@@ -18,10 +17,6 @@ export default async function InscritosPage({
   searchParams: { token?: string }
 }) {
   const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect("/login")
-  }
 
   const edital = await prisma.edital.findUnique({
     where: { id: params.id },
@@ -43,7 +38,7 @@ export default async function InscritosPage({
   }
 
   // Verificar se o usuário é administrador
-  const isAdmin = session.user.tipo === 1
+  const isAdmin = session?.user.tipo === 1
 
   // Se for administrador, permite acesso direto
   if (isAdmin) {

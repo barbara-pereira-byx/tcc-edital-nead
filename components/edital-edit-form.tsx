@@ -11,6 +11,17 @@ import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent } from "@/components/ui/card"
 import { FileUploadArea } from "./file-upload-area"
 import { useRouter } from "next/navigation"
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 
 interface Edital {
   id: string
@@ -47,6 +58,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
   const [senha, setSenha] = useState("")
   const [arquivos, setArquivos] = useState<FileUpload[]>([])
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const [editalToEncerrar, setEditalToEncerrar] = useState<string | null>(null)
 
   useEffect(() => {
     if (edital) {
@@ -214,6 +226,41 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
     }
   }
 
+  const handleEncerrar = async (id: string) => {
+    try {
+      const response = await fetch(`/api/editais/${id}/encerrar`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ dataEncerramento: new Date().toISOString() }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Edital encerrado",
+          description: "O edital foi encerrado com sucesso",
+        });
+        router.refresh();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Erro ao encerrar edital",
+          description: error.message || "Ocorreu um erro ao tentar encerrar o edital",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao encerrar edital",
+        description: "Ocorreu um erro ao tentar encerrar o edital",
+        variant: "destructive",
+      });
+    } finally {
+      setEditalToEncerrar(null);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="border-dashed border-2">
@@ -328,11 +375,41 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center mt-4">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setEditalToEncerrar(edital.id)}
+            >
+              Encerrar edital
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Encerrar Edital</AlertDialogTitle>
+              <AlertDialogDescription>
+                Deseja realmente encerrar este edital? Após encerrado, não será possível receber novas inscrições.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => handleEncerrar(edital.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                Encerrar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90">
           {isLoading ? "Salvando..." : "Salvar Alterações"}
         </Button>
       </div>
+
     </form>
   )
 }

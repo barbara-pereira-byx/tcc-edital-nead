@@ -80,32 +80,41 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
         })
       }, 300)
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
+      // Usar sistema de arquivos local diretamente em vez da API
+      try {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
 
-      clearInterval(progressInterval)
+        clearInterval(progressInterval)
 
-      if (!response.ok) {
-        throw new Error("Erro ao fazer upload do arquivo")
-      }
-
-      const data = await response.json()
-
-      setArquivos((prev) => {
-        const updated = [...prev]
-        updated[index] = {
-          ...updated[index],
-          status: "success",
-          progress: 100,
-          url: data.url,
+        if (!response.ok) {
+          console.error("Erro na resposta da API:", await response.text());
+          throw new Error("Erro ao fazer upload do arquivo")
         }
-        return updated
-      })
 
-      return data.url
+        const data = await response.json()
+        console.log("Resposta do upload:", data);
+
+        setArquivos((prev) => {
+          const updated = [...prev]
+          updated[index] = {
+            ...updated[index],
+            status: "success",
+            progress: 100,
+            url: data.url,
+          }
+          return updated
+        })
+
+        return data.url
+      } catch (uploadError) {
+        console.error("Erro detalhado no upload:", uploadError);
+        throw uploadError;
+      }
     } catch (error) {
+      console.error("Erro geral no upload:", error);
       setArquivos((prev) => {
         const updated = [...prev]
         updated[index] = {

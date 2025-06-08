@@ -7,6 +7,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Configuração para servir arquivos estáticos da pasta uploads
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/static/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;

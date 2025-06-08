@@ -78,9 +78,6 @@ export async function POST(request: NextRequest) {
 }
 
 // Configuração para o limite de tamanho do corpo da requisição
-export const config = {
-  api: {
-    bodyParser: false,
-    responseLimit: '10mb',
-  },
-}
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Tempo máximo em segundos
+export const runtime = 'nodejs';

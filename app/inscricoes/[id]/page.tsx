@@ -60,13 +60,22 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4 max-w-3xl mx-auto">
-          <Link
-            href="/inscricoes"
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800 mb-4 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Voltar para minhas inscrições
-          </Link>
+          <div className="flex gap-4 mb-4">
+            <Link
+              href="/editais"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para editais
+            </Link>
+            <Link
+              href="/inscricoes"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para minhas inscrições
+            </Link>
+          </div>
 
           <div className="bg-white rounded-lg shadow-sm p-6 border border-slate-200 mb-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
@@ -74,7 +83,9 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
                 <h1 className="text-2xl font-bold text-slate-900">{inscricao.formulario.edital.titulo}</h1>
                 <p className="text-slate-500">Inscrição realizada em {formatarData(inscricao.dataHora)}</p>
               </div>
-              <Badge className="self-start md:self-auto">Inscrito</Badge>
+              <Badge className="self-start md:self-auto">
+                {inscricao.status === 'CANCELADO' ? 'CANCELADO' : 'ATIVO'}
+              </Badge>
             </div>
           </div>
 
@@ -144,7 +155,7 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
                   <Link href={`/editais/${inscricao.formulario.edital.id}`}>Ver Edital Completo</Link>
                 </Button>
                 <div className="flex justify-end gap-4">
-                  {isOwner && (
+                  {isOwner && inscricao.status === 'ATIVO' && (
                     <CancelInscricaoButton inscricaoId={inscricao.id} />
                   )}
                 </div>

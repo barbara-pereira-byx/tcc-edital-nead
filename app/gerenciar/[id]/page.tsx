@@ -6,6 +6,10 @@ import { EditalEditForm } from "@/components/edital-edit-form"
 import { FormularioEditForm } from "@/components/formulario-edit-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
+import {
+  ChevronLeft,
+  FileIcon as FilePdf,
+} from "lucide-react"
 
 export default async function EditarEditalPage({ params }: { params: { id: string } }) {
   // Corrigindo o erro de parâmetros dinâmicos
@@ -51,9 +55,23 @@ export default async function EditarEditalPage({ params }: { params: { id: strin
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
-          <Link href="/gerenciar" className="text-sm text-blue-600 hover:underline mb-2 inline-block">
-            ← Voltar para gerenciador de editais
-          </Link>
+          
+          <div className="flex gap-4 mb-4">
+            <Link
+              href="/editais"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para editais
+            </Link>
+            <Link
+              href="/gerenciar"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para gerenciador de editais
+            </Link>
+          </div>
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Editar Edital</h1>
             <p className="text-muted-foreground">Edite as informações do edital e seu formulário de inscrição</p>

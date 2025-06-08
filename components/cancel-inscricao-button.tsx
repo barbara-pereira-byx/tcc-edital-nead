@@ -20,7 +20,8 @@ interface CancelInscricaoButtonProps {
 }
 
 export function CancelInscricaoButton({ inscricaoId }: CancelInscricaoButtonProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [firstOpen, setFirstOpen] = useState(false)
+  const [secondOpen, setSecondOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -54,27 +55,56 @@ export function CancelInscricaoButton({ inscricaoId }: CancelInscricaoButtonProp
       })
     } finally {
       setIsLoading(false)
-      setIsOpen(false)
+      setSecondOpen(false)
     }
   }
 
   return (
     <>
-      <Button variant="destructive" onClick={() => setIsOpen(true)}>
+      <Button variant="destructive" onClick={() => setFirstOpen(true)}>
         Cancelar Inscrição
       </Button>
 
-      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
+      {/* Primeiro modal */}
+      <AlertDialog open={firstOpen} onOpenChange={setFirstOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancelar Inscrição</AlertDialogTitle>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja cancelar esta inscrição? Esta ação não pode ser desfeita.
+              Você deseja cancelar sua inscrição? Essa ação será confirmada novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Voltar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel} className="bg-red-600 hover:bg-red-700" disabled={isLoading}>
+            <AlertDialogAction
+              onClick={() => {
+                setFirstOpen(false)
+                setSecondOpen(true)
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Segundo modal */}
+      <AlertDialog open={secondOpen} onOpenChange={setSecondOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Cancelamento</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa é a última confirmação. Deseja realmente cancelar sua inscrição? Essa ação é irreversível.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="bg-red-600 hover:bg-red-700"
+            >
               {isLoading ? "Cancelando..." : "Sim, cancelar inscrição"}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -18,13 +18,22 @@ export default async function NovoUsuarioPage() {
     <div className="flex min-h-screen flex-col">
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4 max-w-3xl mx-auto">
-          <Link
-            href="/usuarios"
-            className="flex items-center text-sm text-blue-600 hover:text-blue-800 mb-4 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Voltar para lista de usuários
-          </Link>
+          <div className="flex gap-4 mb-4">
+            <Link
+              href="/editais"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para editais
+            </Link>
+            <Link
+              href="/usuarios"
+              className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Voltar para lista de usuários
+            </Link>
+          </div>
 
           <h1 className="text-2xl font-bold mb-6">Novo Usuário</h1>
 

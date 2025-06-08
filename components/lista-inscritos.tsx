@@ -322,7 +322,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
               <Tabs defaultValue="respostas">
                 <TabsList className="mb-4">
                   <TabsTrigger value="respostas">Respostas</TabsTrigger>
-                  <TabsTrigger value="anexos">Anexos</TabsTrigger>
+                  <TabsTrigger value="anexos">Arquivos</TabsTrigger>
                   <TabsTrigger value="info">Informações do Candidato</TabsTrigger>
                 </TabsList>
 

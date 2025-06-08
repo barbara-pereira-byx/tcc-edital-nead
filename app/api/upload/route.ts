@@ -5,7 +5,10 @@ import { existsSync } from "fs";
 
 // Função para verificar se estamos em produção e se o Vercel Blob está disponível
 const isVercelBlobAvailable = () => {
-  return process.env.BLOB_READ_WRITE_TOKEN && process.env.NODE_ENV === "production";
+  const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const isProd = process.env.NODE_ENV === "production";
+  console.log(`Verificando disponibilidade do Vercel Blob - Token disponível: ${hasToken}, Ambiente: ${process.env.NODE_ENV}`);
+  return hasToken && isProd;
 }
 
 export async function POST(request: NextRequest) {
@@ -48,13 +51,22 @@ export async function POST(request: NextRequest) {
     if (isVercelBlobAvailable()) {
       console.log("Usando Vercel Blob para upload");
       const { put } = await import("@vercel/blob");
+      
+      // Verificar explicitamente o token antes de tentar o upload
+      if (!process.env.BLOB_READ_WRITE_TOKEN) {
+        console.error("Token do Vercel Blob não encontrado");
+        return NextResponse.json({ error: "Configuração do servidor incompleta" }, { status: 500 });
+      }
 
       // Tente fazer o upload e capture qualquer erro
       try {
+        console.log("Iniciando upload para Vercel Blob");
         const blob = await put(`editais/${fileName}`, file, {
           access: "public",
+          token: process.env.BLOB_READ_WRITE_TOKEN,
         });
 
+        console.log("Upload para Vercel Blob concluído com sucesso:", blob.url);
         return NextResponse.json({
           url: blob.url,
           label: label,
@@ -62,7 +74,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (blobError) {
         console.error("Erro ao fazer upload para Vercel Blob:", blobError);
-        return NextResponse.json({ error: "Erro ao fazer upload para Vercel Blob" }, { status: 500 });
+        return NextResponse.json({ error: `Erro ao fazer upload para Vercel Blob: ${blobError.message}` }, { status: 500 });
       }
     } else {
       // Usar sistema de arquivos local em desenvolvimento

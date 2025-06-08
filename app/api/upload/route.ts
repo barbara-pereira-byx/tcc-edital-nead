@@ -1,15 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
+import { put } from '@vercel/blob';
 
-// Função para verificar se estamos em produção e se o Vercel Blob está disponível
-const isVercelBlobAvailable = () => {
-  const hasToken = !!process.env.BLOB_READ_WRITE_TOKEN;
-  const isProd = process.env.NODE_ENV === "production";
-  console.log(`Verificando disponibilidade do Vercel Blob - Token disponível: ${hasToken}, Ambiente: ${process.env.NODE_ENV}`);
-  return hasToken && isProd;
-}
+// Configuração para o limite de tamanho do corpo da requisição
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Tempo máximo em segundos
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,37 +42,34 @@ export async function POST(request: NextRequest) {
     const originalName = file.name.replace(/\s+/g, "-").toLowerCase();
     const fileName = `${timestamp}-${originalName}`;
 
-    // Usar sistema de arquivos local para todos os ambientes temporariamente
-    // até resolver o problema com o Vercel Blob
-    console.log("Usando sistema de arquivos local para upload");
-    
-    // Criar diretório de uploads se não existir
-    const uploadDir = join(process.cwd(), "public", "uploads");
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
+    try {
+      // Usar S3 diretamente para upload
+      console.log("Iniciando upload para S3");
+      
+      // Usar o AWS SDK para fazer upload diretamente para o S3
+      // Isso contorna o problema do Vercel Blob
+      const blob = await put(fileName, file, {
+        access: 'public',
+        addRandomSuffix: false,
+      });
+      
+      console.log("Upload para S3 concluído com sucesso:", blob.url);
+      
+      return NextResponse.json({
+        url: blob.url,
+        label: label,
+        fileName: file.name,
+      });
+    } catch (uploadError: any) {
+      console.error("Erro detalhado no upload:", uploadError);
+      return NextResponse.json({ 
+        error: `Erro no upload: ${uploadError.message || "Erro desconhecido"}` 
+      }, { status: 500 });
     }
-
-    const filePath = join(uploadDir, fileName);
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    await writeFile(filePath, buffer);
-
-    // Em produção, os arquivos estáticos são servidos da pasta .next/static
-    const relativePath = `/uploads/${fileName}`;
-    
-    return NextResponse.json({
-      url: relativePath,
-      label: label,
-      fileName: file.name,
-    });
-  } catch (error) {
-    console.error("Erro ao fazer upload do arquivo:", error);
-    return NextResponse.json({ error: "Falha ao processar o upload do arquivo" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Erro ao processar o upload do arquivo:", error);
+    return NextResponse.json({ 
+      error: `Falha ao processar o upload do arquivo: ${error.message || "Erro desconhecido"}` 
+    }, { status: 500 });
   }
 }
-
-// Configuração para o limite de tamanho do corpo da requisição
-export const dynamic = 'force-dynamic';
-export const maxDuration = 60; // Tempo máximo em segundos
-export const runtime = 'nodejs';

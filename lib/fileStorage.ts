@@ -1,86 +1,71 @@
-import fs from "fs"
-import path from "path"
-import { randomUUID } from "crypto"
-
-// Diretório base para armazenar os arquivos
-const UPLOAD_DIR = path.join(process.cwd(), "uploads")
-
-// Garantir que o diretório de uploads existe
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
-}
-
-// Diretório para arquivos de usuários
-const USER_FILES_DIR = path.join(UPLOAD_DIR, "user-files")
-if (!fs.existsSync(USER_FILES_DIR)) {
-  fs.mkdirSync(USER_FILES_DIR, { recursive: true })
-}
-
-export interface FileInfo {
-  nomeOriginal: string
-  nomeArmazenado: string
-  tamanho: number
-  tipo: string
-  caminho: string
-}
+import { ref, getDownloadURL, getMetadata, uploadBytes } from "firebase/storage";
+import { storage } from "./firebase";
 
 /**
- * Salva um arquivo no sistema de arquivos
- * @param file Arquivo a ser salvo
- * @param userId ID do usuário
- * @param inscricaoId ID da inscrição
- * @returns Informações sobre o arquivo salvo
+ * Obtém a URL de download de um arquivo no Firebase Storage
+ * @param path Caminho do arquivo no storage
+ * @returns URL pública do arquivo
  */
-export async function saveFile(file: File, userId: string, inscricaoId: string): Promise<FileInfo> {
-  // Criar diretório específico para o usuário e inscrição
-  const userDir = path.join(USER_FILES_DIR, userId)
-  if (!fs.existsSync(userDir)) {
-    fs.mkdirSync(userDir, { recursive: true })
-  }
-
-  const inscricaoDir = path.join(userDir, inscricaoId)
-  if (!fs.existsSync(inscricaoDir)) {
-    fs.mkdirSync(inscricaoDir, { recursive: true })
-  }
-
-  // Gerar um nome único para o arquivo
-  const fileExtension = path.extname(file.name)
-  const storedFileName = `${randomUUID()}${fileExtension}`
-  const filePath = path.join(inscricaoDir, storedFileName)
-
-  // Converter o arquivo para um buffer
-  const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
-
-  // Salvar o arquivo
-  fs.writeFileSync(filePath, buffer)
-
-  // Retornar informações sobre o arquivo
-  return {
-    nomeOriginal: file.name,
-    nomeArmazenado: storedFileName,
-    tamanho: file.size,
-    tipo: file.type,
-    caminho: `uploads/user-files/${userId}/${inscricaoId}/${storedFileName}`,
+export async function getFileUrl(path: string): Promise<string> {
+  try {
+    const fileRef = ref(storage, path);
+    return await getDownloadURL(fileRef);
+  } catch (error) {
+    console.error("Erro ao obter URL do arquivo:", error);
+    throw error;
   }
 }
 
 /**
- * Remove um arquivo do sistema de arquivos
- * @param filePath Caminho do arquivo a ser removido
+ * Extrai o caminho do arquivo a partir da URL do Firebase Storage
+ * @param url URL do Firebase Storage
+ * @returns Caminho do arquivo no storage
  */
-export function removeFile(filePath: string): void {
-  const fullPath = path.join(process.cwd(), filePath)
-  if (fs.existsSync(fullPath)) {
-    fs.unlinkSync(fullPath)
+export function getPathFromUrl(url: string): string {
+  if (!url) return "";
+  
+  try {
+    // Extrai o token de caminho da URL do Firebase
+    const urlObj = new URL(url);
+    const pathMatch = urlObj.pathname.match(/\/o\/(.+?)(?:\?|$)/);
+    
+    if (pathMatch && pathMatch[1]) {
+      // Decodifica o caminho do arquivo
+      return decodeURIComponent(pathMatch[1]);
+    }
+    
+    // Se for uma URL local (ex: /uploads/file.pdf)
+    if (url.startsWith('/uploads/')) {
+      return `editais/${url.replace('/uploads/', '')}`;
+    }
+    
+    return url;
+  } catch (error) {
+    console.error("Erro ao extrair caminho da URL:", error);
+    return url;
   }
 }
 
 /**
- * Obtém o caminho completo para um arquivo
- * @param relativePath Caminho relativo do arquivo
- * @returns Caminho completo do arquivo
+ * Verifica se uma URL é do Firebase Storage
  */
-export function getFilePath(relativePath: string): string {
-  return path.join(process.cwd(), relativePath)
+export function isFirebaseUrl(url: string): boolean {
+  return url && url.includes('firebasestorage.googleapis.com');
+}
+
+/**
+ * Faz upload de um arquivo para o Firebase Storage
+ * @param file Arquivo a ser enviado
+ * @param path Caminho onde o arquivo será armazenado
+ * @returns URL pública do arquivo
+ */
+export async function uploadFile(file: File | Blob, path: string): Promise<string> {
+  try {
+    const storageRef = ref(storage, path);
+    const snapshot = await uploadBytes(storageRef, file);
+    return await getDownloadURL(snapshot.ref);
+  } catch (error) {
+    console.error("Erro ao fazer upload do arquivo:", error);
+    throw error;
+  }
 }

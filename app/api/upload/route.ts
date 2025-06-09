@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { put } from "@vercel/blob";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "@/lib/firebase";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -46,33 +47,42 @@ export async function POST(request: NextRequest) {
     const fileName = `${timestamp}-${originalName}`;
 
     try {
-      // Em ambiente de produção, usar Vercel Blob
-      if (process.env.VERCEL === '1') {
-        console.log("Usando Vercel Blob para armazenamento");
+      // Em ambiente de produção, usar Firebase Storage
+      if (process.env.NODE_ENV === 'production' || process.env.USE_FIREBASE === 'true') {
+        console.log("Usando Firebase Storage para armazenamento");
         
-        if (!process.env.BLOB_READ_WRITE_TOKEN) {
-          console.error("Token do Vercel Blob não configurado");
+        if (!process.env.FIREBASE_STORAGE_BUCKET) {
+          console.error("Firebase Storage não configurado");
           return NextResponse.json({ 
             error: "Configuração de armazenamento incompleta" 
           }, { status: 500 });
         }
         
         try {
-          const blob = await put(`editais/${fileName}`, file, {
-            access: 'public',
+          const bytes = await file.arrayBuffer();
+          
+          // Criar referência para o arquivo no Firebase Storage
+          const storageRef = ref(storage, `editais/${fileName}`);
+          
+          // Fazer upload do arquivo
+          const snapshot = await uploadBytes(storageRef, bytes, {
+            contentType: file.type
           });
           
-          console.log("Upload para Vercel Blob concluído:", blob.url);
+          // Obter URL pública do arquivo
+          const url = await getDownloadURL(snapshot.ref);
+          
+          console.log("Upload para Firebase Storage concluído:", url);
           
           return NextResponse.json({
-            url: blob.url,
+            url: url,
             label: label,
             fileName: file.name
           });
-        } catch (blobError: any) {
-          console.error("Erro no Vercel Blob:", blobError);
+        } catch (firebaseError: any) {
+          console.error("Erro no Firebase Storage:", firebaseError);
           return NextResponse.json({ 
-            error: `Erro no armazenamento: ${blobError.message}` 
+            error: `Erro no armazenamento: ${firebaseError.message}` 
           }, { status: 500 });
         }
       }

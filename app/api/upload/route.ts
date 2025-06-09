@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { adminStorage } from "../../../lib/firebase-admin";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "../../../lib/firebase";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -59,27 +60,17 @@ export async function POST(request: NextRequest) {
         
         try {
           const bytes = await file.arrayBuffer();
-          const buffer = Buffer.from(bytes);
           
-          // Caminho do arquivo no bucket
-          const filePath = `editais/${fileName}`;
-          const bucket = adminStorage.bucket();
+          // Criar referência para o arquivo no Firebase Storage
+          const storageRef = ref(storage, `editais/${fileName}`);
           
-          // Criar um arquivo no bucket
-          const fileRef = bucket.file(filePath);
-          
-          // Fazer upload do buffer
-          await fileRef.save(buffer, {
-            metadata: {
-              contentType: file.type
-            }
+          // Fazer upload do arquivo usando o ArrayBuffer
+          const snapshot = await uploadBytes(storageRef, bytes, {
+            contentType: file.type
           });
           
-          // Tornar o arquivo público
-          await fileRef.makePublic();
-          
           // Obter URL pública do arquivo
-          const url = `https://storage.googleapis.com/${bucket.name}/${filePath}`;
+          const url = await getDownloadURL(snapshot.ref);
           
           console.log("Upload para Firebase Storage concluído:", url);
           

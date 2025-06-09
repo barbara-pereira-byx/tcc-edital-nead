@@ -3,7 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "@/lib/firebase";
+import { storage } from "../../../lib/firebase";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -64,8 +64,11 @@ export async function POST(request: NextRequest) {
           // Criar referência para o arquivo no Firebase Storage
           const storageRef = ref(storage, `editais/${fileName}`);
           
+          // Converter ArrayBuffer para Blob para compatibilidade
+          const blob = new Blob([bytes], { type: file.type });
+          
           // Fazer upload do arquivo
-          const snapshot = await uploadBytes(storageRef, bytes, {
+          const snapshot = await uploadBytes(storageRef, blob, {
             contentType: file.type
           });
           

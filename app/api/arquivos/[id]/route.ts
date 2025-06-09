@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import fs from "fs"
 import path from "path"
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -42,33 +41,54 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return new NextResponse("Arquivo não encontrado", { status: 404 })
     }
 
-    // Obter o caminho completo do arquivo
-    const filePath = path.join(process.cwd(), arquivo.caminho)
+    try {
+      // Determinar o tipo MIME com base na extensão
+      const ext = path.extname(arquivo.nomeOriginal).toLowerCase()
+      let contentType = "application/octet-stream"
 
-    // Verificar se o arquivo existe
-    if (!fs.existsSync(filePath)) {
-      return new NextResponse("Arquivo não encontrado no sistema", { status: 404 })
+      if (ext === ".pdf") contentType = "application/pdf"
+      else if (ext === ".doc" || ext === ".docx") contentType = "application/msword"
+      else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg"
+      else if (ext === ".png") contentType = "image/png"
+      
+      // Retornar uma resposta informativa para o usuário
+      return new NextResponse(
+        `<html>
+          <head>
+            <title>Visualização de Arquivo</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body { font-family: Arial, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
+              .container { max-width: 600px; margin: 0 auto; }
+              h1 { color: #333; }
+              .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
+              .file-name { font-weight: bold; }
+              .btn { display: inline-block; background: #0070f3; color: white; padding: 10px 15px; 
+                     text-decoration: none; border-radius: 5px; margin-top: 10px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Arquivo Indisponível</h1>
+              <div class="info">
+                <p>O arquivo <span class="file-name">${arquivo.nomeOriginal}</span> não pode ser exibido diretamente.</p>
+                <p>Devido a limitações do ambiente de produção, os arquivos enviados durante o desenvolvimento não estão disponíveis.</p>
+                <p>Por favor, faça o upload do arquivo novamente para visualizá-lo.</p>
+              </div>
+              <a href="/inscricoes" class="btn">Voltar para Inscrições</a>
+            </div>
+          </body>
+        </html>`,
+        {
+          headers: {
+            "Content-Type": "text/html",
+          },
+        }
+      )
+    } catch (error) {
+      console.error(`Erro ao acessar arquivo: ${arquivo.caminho}`, error)
+      return new NextResponse("Erro ao acessar arquivo", { status: 500 })
     }
-
-    // Ler o arquivo
-    const fileBuffer = fs.readFileSync(filePath)
-
-    // Determinar o tipo MIME com base na extensão
-    const ext = path.extname(arquivo.nomeOriginal).toLowerCase()
-    let contentType = "application/octet-stream"
-
-    if (ext === ".pdf") contentType = "application/pdf"
-    else if (ext === ".doc" || ext === ".docx") contentType = "application/msword"
-    else if (ext === ".jpg" || ext === ".jpeg") contentType = "image/jpeg"
-    else if (ext === ".png") contentType = "image/png"
-
-    // Retornar o arquivo
-    return new NextResponse(fileBuffer, {
-      headers: {
-        "Content-Type": contentType,
-        "Content-Disposition": `inline; filename="${arquivo.nomeOriginal}"`,
-      },
-    })
   } catch (error) {
     console.error("Erro ao buscar arquivo:", error)
     return new NextResponse("Erro ao buscar arquivo", { status: 500 })

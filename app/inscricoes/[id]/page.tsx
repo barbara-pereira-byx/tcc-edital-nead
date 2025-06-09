@@ -17,6 +17,9 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     redirect("/login")
   }
 
+  console.log("Buscando inscrição:", params.id);
+  
+  // Buscar a inscrição com todos os campos, incluindo os campos do formulário
   const inscricao = await prisma.formularioUsuario.findUnique({
     where: { id: params.id },
     include: {
@@ -31,9 +34,16 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
         include: {
           campo: true,
         },
+        orderBy: {
+          campo: {
+            ordem: 'asc'
+          }
+        }
       },
     },
   })
+  
+  console.log("Campos da inscrição:", inscricao?.campos?.length || 0);
 
   if (!inscricao) {
     notFound()
@@ -94,27 +104,35 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
               <CardTitle>Dados da Inscrição</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {inscricao.campos.map((resposta) => {
-                const campo = resposta.campo
-                const rotulo = campo.rotulo.includes("|") ? campo.rotulo.split("|")[0] : campo.rotulo
-                const isArquivo = campo.tipo === 6
+              {inscricao.formulario.campos.map((campoFormulario) => {
+                // Encontrar a resposta correspondente a este campo
+                const resposta = inscricao.campos.find(r => r.campoFormularioId === campoFormulario.id)
+                const rotulo = campoFormulario.rotulo.includes("|") ? campoFormulario.rotulo.split("|")[0] : campoFormulario.rotulo
+                const isArquivo = campoFormulario.tipo === 6
 
                 return (
-                  <div key={resposta.id} className="grid grid-cols-3 gap-4 py-2 border-b">
+                  <div key={campoFormulario.id} className="grid grid-cols-3 gap-4 py-2 border-b">
                     <div className="font-medium">{rotulo}</div>
                     <div className="col-span-2">
-                      {isArquivo ? (
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-blue-600" />
-                          <span>{resposta.valor || "-"}</span>
-                          <Button variant="outline" size="sm" asChild className="ml-2">
-                            <a href={`/api/arquivos/${resposta.id}`} target="_blank" rel="noopener noreferrer">
+                      {resposta ? (
+                        isArquivo ? (
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                            <span>{resposta.valor || "-"}</span>
+                            <a 
+                              href={`/api/arquivos/${resposta.id}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 ml-2"
+                            >
                               <Download className="h-4 w-4 mr-1" /> Abrir
                             </a>
-                          </Button>
-                        </div>
+                          </div>
+                        ) : (
+                          resposta.valor || "-"
+                        )
                       ) : (
-                        resposta.valor || "-"
+                        "-"
                       )}
                     </div>
                   </div>

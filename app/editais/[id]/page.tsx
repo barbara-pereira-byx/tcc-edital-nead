@@ -19,6 +19,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { FormularioTabTrigger } from "@/components/formulario-tab-trigger"
 import { FormularioInscricao } from "@/components/formulario-inscricao"
 import { FormularioPreview } from "@/components/formulario-preview"
 import { ListaInscritos } from "@/components/lista-inscritos"
@@ -29,11 +30,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default async function EditalPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect("/login")
-  }
-
+  
   const edital = await prisma.edital.findUnique({
     where: { id: params.id },
     include: {
@@ -56,10 +53,10 @@ export default async function EditalPage({ params }: { params: { id: string } })
   }
 
   // Verificar se o usuário é administrador
-  const isAdmin = session.user.tipo === 1
+  const isAdmin = session?.user?.tipo === 1
 
   let inscricao = null
-  if (edital.formulario?.id) {
+  if (session && edital.formulario?.id) {
     inscricao = await prisma.formularioUsuario.findFirst({
       where: {
         formularioId: edital.formulario.id,
@@ -101,7 +98,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
 
   // Status do edital para exibição
   const getStatusEdital = () => {
-    if (jaInscrito && inscricao.status === 'ATIVO') return { label: "Inscrito", variant: "success", icon: CheckCircle }
+    if (jaInscrito && inscricao?.status === 'ATIVO') return { label: "Inscrito", variant: "success", icon: CheckCircle }
     if (periodoInscricoesAberto) return { label: "Inscrições Abertas", variant: "default", icon: null }
     if (dataInicio && hoje < dataInicio) return { label: "Inscrições em Breve", variant: "warning", icon: Clock }
     return { label: "Inscrições Encerradas", variant: "secondary", icon: null }
@@ -180,9 +177,11 @@ export default async function EditalPage({ params }: { params: { id: string } })
               <TabsTrigger value="anexos" className="rounded-md data-[state=active]:bg-slate-100">
                 Arquivos do Edital
               </TabsTrigger>
-              <TabsTrigger value="formulario" className="rounded-md data-[state=active]:bg-slate-100">
-                {isAdmin ? "Campos do Formulário" : jaInscrito ? "Minha Inscrição" : "Formulário de Inscrição"}
-              </TabsTrigger>
+              <FormularioTabTrigger 
+                session={session} 
+                isAdmin={isAdmin} 
+                jaInscrito={jaInscrito} 
+              />
               {isAdmin && (
                 <TabsTrigger value="inscritos" className="rounded-md data-[state=active]:bg-slate-100">
                   Lista de Inscritos
@@ -258,7 +257,21 @@ export default async function EditalPage({ params }: { params: { id: string } })
             <TabsContent value="formulario">
               <Card>
                 <CardContent className="p-6">
-                  {isAdmin ? (
+                  {!session ? (
+                    // Usuário não autenticado
+                    <div className="text-center py-8">
+                      <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+                      <h2 className="text-xl font-semibold mb-2">Login Necessário</h2>
+                      <p className="text-slate-500 mb-6">
+                        Para acessar o formulário de inscrição, é necessário fazer login.
+                      </p>
+                      <Link href={`/login?callbackUrl=${encodeURIComponent(`/editais/${params.id}`)}`}>
+                        <Button aria-label="Fazer login" className="px-6">
+                          Fazer Login
+                        </Button>
+                      </Link>
+                    </div>
+                  ) : isAdmin ? (
                     // Visualização para administradores - apenas visualizar os campos
                     <>
                       <h2 className="text-xl font-semibold mb-6">Campos do Formulário</h2>
@@ -271,7 +284,7 @@ export default async function EditalPage({ params }: { params: { id: string } })
                         </Alert>
                       )}
                     </>
-                  ) : inscricao.status === 'ATIVO' ? (
+                  ) : inscricao?.status === 'ATIVO' ? (
                     // Usuário já inscrito
                     <div className="text-center py-8">
                       <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />

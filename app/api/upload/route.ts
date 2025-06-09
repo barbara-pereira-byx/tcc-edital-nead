@@ -3,7 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../../../lib/firebase";
+import { storage } from "./firebase-config";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -51,8 +51,18 @@ export async function POST(request: NextRequest) {
       if (process.env.NODE_ENV === 'production' || process.env.USE_FIREBASE === 'true') {
         console.log("Usando Firebase Storage para armazenamento");
         
-        if (!process.env.FIREBASE_STORAGE_BUCKET) {
-          console.error("Firebase Storage não configurado");
+        // Verificar se o Firebase está configurado corretamente
+        const requiredEnvVars = [
+          'FIREBASE_API_KEY',
+          'FIREBASE_AUTH_DOMAIN',
+          'FIREBASE_PROJECT_ID',
+          'FIREBASE_STORAGE_BUCKET'
+        ];
+        
+        const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+        
+        if (missingVars.length > 0) {
+          console.error(`Firebase Storage não configurado. Variáveis ausentes: ${missingVars.join(', ')}`);
           return NextResponse.json({ 
             error: "Configuração de armazenamento incompleta" 
           }, { status: 500 });
@@ -61,14 +71,16 @@ export async function POST(request: NextRequest) {
         try {
           const bytes = await file.arrayBuffer();
           
+          // Verificar se o storage foi inicializado corretamente
+          if (!storage || !storage.ref) {
+            throw new Error("Firebase Storage não inicializado corretamente");
+          }
+          
           // Criar referência para o arquivo no Firebase Storage
           const storageRef = ref(storage, `editais/${fileName}`);
           
-          // Converter ArrayBuffer para Blob para compatibilidade
-          const blob = new Blob([bytes], { type: file.type });
-          
-          // Fazer upload do arquivo
-          const snapshot = await uploadBytes(storageRef, blob, {
+          // Fazer upload do arquivo usando o ArrayBuffer
+          const snapshot = await uploadBytes(storageRef, bytes, {
             contentType: file.type
           });
           

@@ -2,8 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "./firebase-config";
 
 // Configuração para o limite de tamanho do corpo da requisição
 export const dynamic = 'force-dynamic';
@@ -47,60 +45,8 @@ export async function POST(request: NextRequest) {
     const fileName = `${timestamp}-${originalName}`;
 
     try {
-      // Em ambiente de produção, usar Firebase Storage
-      if (process.env.NODE_ENV === 'production' || process.env.USE_FIREBASE === 'true') {
-        console.log("Usando Firebase Storage para armazenamento");
-        
-        // Verificar se o Firebase está configurado corretamente
-        const requiredEnvVars = [
-          'FIREBASE_API_KEY',
-          'FIREBASE_AUTH_DOMAIN',
-          'FIREBASE_PROJECT_ID',
-          'FIREBASE_STORAGE_BUCKET'
-        ];
-        
-        const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
-        
-        if (missingVars.length > 0) {
-          console.error(`Firebase Storage não configurado. Variáveis ausentes: ${missingVars.join(', ')}`);
-          return NextResponse.json({ 
-            error: "Configuração de armazenamento incompleta" 
-          }, { status: 500 });
-        }
-        
-        try {
-          const bytes = await file.arrayBuffer();
-          
-          // Verificar se o storage foi inicializado corretamente
-          if (!storage || !storage.ref) {
-            throw new Error("Firebase Storage não inicializado corretamente");
-          }
-          
-          // Criar referência para o arquivo no Firebase Storage
-          const storageRef = ref(storage, `editais/${fileName}`);
-          
-          // Fazer upload do arquivo usando o ArrayBuffer
-          const snapshot = await uploadBytes(storageRef, bytes, {
-            contentType: file.type
-          });
-          
-          // Obter URL pública do arquivo
-          const url = await getDownloadURL(snapshot.ref);
-          
-          console.log("Upload para Firebase Storage concluído:", url);
-          
-          return NextResponse.json({
-            url: url,
-            label: label,
-            fileName: file.name
-          });
-        } catch (firebaseError: any) {
-          console.error("Erro no Firebase Storage:", firebaseError);
-          return NextResponse.json({ 
-            error: `Erro no armazenamento: ${firebaseError.message}` 
-          }, { status: 500 });
-        }
-      }
+      // Sempre usar armazenamento local, ignorando configuração de ambiente
+      console.log("Usando armazenamento local para todos os ambientes");
       
       // Em ambiente de desenvolvimento, salvar no sistema de arquivos local
       console.log("Salvando arquivo localmente");

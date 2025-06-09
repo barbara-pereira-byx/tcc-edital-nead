@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { EditalFilter } from "@/components/edital-filter"
 import { EditalCard } from "@/components/edital-card"
-import ClientMenu from "../../components/client-menu"
+import EditaisPageClient from "./page-client"
 
 export default async function EditaisPage({
   searchParams,
@@ -105,12 +105,11 @@ export default async function EditaisPage({
 
           <div className="grid grid-cols-12 gap-6">
             <div className="col-span-12 md:col-span-3 space-y-4">
-              {/* Menu do cliente */}
-              <Card>
-                <CardContent className="p-4">
-                  <ClientMenu/>
-                </CardContent>
-              </Card>
+              {/* Menu do cliente - carregado dinamicamente no lado do cliente */}
+              <div className="client-menu-container">
+                {/* @ts-expect-error Server Component */}
+                <EditaisPageClient />
+              </div>
 
               {/* Filtro */}
               <Card>

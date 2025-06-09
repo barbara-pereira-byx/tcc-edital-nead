@@ -51,8 +51,18 @@ export async function POST(request: NextRequest) {
       if (process.env.NODE_ENV === 'production' || process.env.USE_FIREBASE === 'true') {
         console.log("Usando Firebase Storage para armazenamento");
         
-        if (!process.env.FIREBASE_STORAGE_BUCKET) {
-          console.error("Firebase Storage não configurado");
+        // Verificar se o Firebase está configurado corretamente
+        const requiredEnvVars = [
+          'FIREBASE_API_KEY',
+          'FIREBASE_AUTH_DOMAIN',
+          'FIREBASE_PROJECT_ID',
+          'FIREBASE_STORAGE_BUCKET'
+        ];
+        
+        const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+        
+        if (missingVars.length > 0) {
+          console.error(`Firebase Storage não configurado. Variáveis ausentes: ${missingVars.join(', ')}`);
           return NextResponse.json({ 
             error: "Configuração de armazenamento incompleta" 
           }, { status: 500 });
@@ -60,6 +70,11 @@ export async function POST(request: NextRequest) {
         
         try {
           const bytes = await file.arrayBuffer();
+          
+          // Verificar se o storage foi inicializado corretamente
+          if (!storage || !storage.ref) {
+            throw new Error("Firebase Storage não inicializado corretamente");
+          }
           
           // Criar referência para o arquivo no Firebase Storage
           const storageRef = ref(storage, `editais/${fileName}`);

@@ -61,21 +61,34 @@ export async function saveFile(file: File, userId: string, inscricaoId: string) 
   try {
     // Gerar um nome único para o arquivo
     const fileExt = file.name.split('.').pop() || '';
-    const nomeArmazenado = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+    const timestamp = Date.now();
+    const nomeArmazenado = `${timestamp}-${file.name.replace(/\s+/g, "-").toLowerCase()}`;
     
-    // Definir o caminho do arquivo
-    const storagePath = `inscricoes/${userId}/${inscricaoId}/${nomeArmazenado}`;
+    // Preparar o FormData para enviar o arquivo
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('label', `${userId}-${inscricaoId}`);
     
-    // Simular o upload do arquivo
-    console.log(`Simulando salvamento de arquivo: ${file.name}`);
+    // Enviar o arquivo para a API de upload
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
     
-    // Retornar as informações do arquivo
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Erro ao fazer upload do arquivo');
+    }
+    
+    const data = await response.json();
+    
+    // Retornar as informações do arquivo usando o nome retornado pela API
     return {
       nomeOriginal: file.name,
       nomeArmazenado: nomeArmazenado,
       tamanho: file.size,
       tipo: file.type,
-      caminho: storagePath
+      caminho: nomeArmazenado // Usar o mesmo nome para o caminho
     };
   } catch (error) {
     console.error("Erro ao salvar arquivo:", error);

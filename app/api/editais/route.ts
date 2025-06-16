@@ -19,10 +19,9 @@ export async function POST(request: NextRequest) {
       ? new Date(formData.get("dataEncerramento") as string)
       : undefined;
 
-    // Obter arquivos e rótulos
-    const arquivos = formData.getAll("arquivos") as string[];
-    const labels = formData.getAll("labels") as string[];
-
+    // Obter IDs dos arquivos
+    const arquivosIds = formData.getAll("arquivosIds") as string[];
+    
     // Criar o edital no banco de dados
     const edital = await prisma.edital.create({
       data: {
@@ -31,14 +30,22 @@ export async function POST(request: NextRequest) {
         dataCriacao,
         dataPublicacao,
         dataEncerramento,
-        arquivos: {
-          create: arquivos.map((url, index) => ({
-            url,
-            rotulo: labels[index] || `Anexo ${index + 1}`,
-          })),
-        },
       },
     });
+    
+    // Atualizar os arquivos com o ID do edital
+    if (arquivosIds.length > 0) {
+      await prisma.arquivoEdital.updateMany({
+        where: {
+          id: {
+            in: arquivosIds
+          }
+        },
+        data: {
+          editalId: edital.id
+        }
+      });
+    }
 
     return NextResponse.json({ id: edital.id });
   } catch (error) {
@@ -81,7 +88,7 @@ export async function GET(request: NextRequest) {
       prisma.edital.findMany({
         where,
         include: {
-          anexos: true,
+          arquivos: true,
           _count: {
             select: {
               inscricoes: true,

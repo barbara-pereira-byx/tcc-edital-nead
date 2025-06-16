@@ -30,7 +30,7 @@ interface Edital {
   dataCriacao: string
   dataPublicacao: string
   dataEncerramento: string
-  arquivos: { id?: string; url: string; rotulo: string }[]
+  arquivos: { id: string; rotulo: string }[]
 }
 
 interface EditalEditFormProps {
@@ -73,7 +73,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
           file: null,
           label: a.rotulo,
           status: "success",
-          url: a.url,
+          url: `/api/upload/${a.id}`,
           id: a.id,
         })),
       )
@@ -108,54 +108,63 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
 
   const uploadFile = async (file: File, label: string, index: number): Promise<string> => {
     try {
-      const newArquivos = [...arquivos]
-      newArquivos[index] = { ...newArquivos[index], status: "uploading", progress: 0 }
-      setArquivos(newArquivos)
+      const newArquivos = [...arquivos];
+      newArquivos[index] = { ...newArquivos[index], status: "uploading", progress: 0 };
+      setArquivos(newArquivos);
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("label", label)
-      formData.append("editalId", edital.id)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("rotulo", label);
+      formData.append("editalId", edital.id);
 
       const progressInterval = setInterval(() => {
         setArquivos((prev) => {
-          const updated = [...prev]
+          const updated = [...prev];
           if (updated[index].progress !== undefined && updated[index].progress! < 90) {
-            updated[index].progress = (updated[index].progress || 0) + 10
+            updated[index].progress = (updated[index].progress || 0) + 10;
           }
-          return updated
-        })
-      }, 300)
+          return updated;
+        });
+      }, 300);
 
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      clearInterval(progressInterval)
+      clearInterval(progressInterval);
 
       if (!response.ok) {
-        throw new Error("Erro ao fazer upload do arquivo")
+        throw new Error("Erro ao fazer upload do arquivo");
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       setArquivos((prev) => {
-        const updated = [...prev]
-        updated[index] = { ...updated[index], status: "success", progress: 100, url: data.url, id: data.id }
-        return updated
-      })
+        const updated = [...prev];
+        updated[index] = { 
+          ...updated[index], 
+          status: "success", 
+          progress: 100, 
+          id: data.id,
+          url: `/api/upload/${data.id}` // URL para download do arquivo
+        };
+        return updated;
+      });
 
-      return data.url
+      // Retorna o ID do arquivo no MongoDB
+      return data.id;
+
     } catch (error) {
       setArquivos((prev) => {
-        const updated = [...prev]
-        updated[index] = { ...updated[index], status: "error" }
-        return updated
-      })
-      throw error
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: "error" };
+        return updated;
+      });
+      throw error;
     }
-  }
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -178,10 +187,9 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
       const arquivosData = arquivos
         .map((arquivo) => ({
           id: arquivo.id, // Incluir ID se existir (para arquivos existentes)
-          url: arquivo.url || "", // URL do arquivo (existente ou recém-carregado)
           rotulo: arquivo.label,
         }))
-        .filter((arquivo) => arquivo.url) // Filtrar apenas arquivos com URL
+        .filter((arquivo) => arquivo.id) // Filtrar apenas arquivos com ID
 
       const body = {
         titulo,

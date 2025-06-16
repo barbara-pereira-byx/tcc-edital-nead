@@ -201,21 +201,22 @@ export default async function EditalPage({ params }: { params: { id: string } })
                         {edital.arquivos.map((arquivo: any) => {
                           // Determinar o ícone com base na extensão do arquivo
                           const getFileIcon = () => {
-                            const url = arquivo.url.toLowerCase()
-                            if (url.endsWith(".pdf")) return FilePdf
-                            if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return FileImage
-                            if (url.match(/\.(zip|rar|7z|tar|gz)$/)) return FileArchive
-                            if (url.match(/\.(xls|xlsx|csv)$/)) return FileSpreadsheet
-                            if (url.match(/\.(doc|docx|txt)$/)) return FileText
+                            const rotulo = arquivo.rotulo.toLowerCase()
+                            if (rotulo.endsWith(".pdf")) return FilePdf
+                            if (rotulo.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return FileImage
+                            if (rotulo.match(/\.(zip|rar|7z|tar|gz)$/)) return FileArchive
+                            if (rotulo.match(/\.(xls|xlsx|csv)$/)) return FileSpreadsheet
+                            if (rotulo.match(/\.(doc|docx|txt)$/)) return FileText
                             return File
                           }
 
                           const FileIcon = getFileIcon()
+                          const downloadUrl = `/api/upload/${arquivo.id}`
 
                           return (
                             <a
                               key={arquivo.id}
-                              href={arquivo.url}
+                              href={downloadUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex flex-col items-center justify-center bg-white hover:bg-blue-50 rounded-lg p-6 border border-slate-200 hover:border-blue-300 transition-all shadow-sm hover:shadow group"

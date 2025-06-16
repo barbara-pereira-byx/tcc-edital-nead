@@ -55,77 +55,63 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
 
   const uploadFile = async (file: File, label: string, index: number): Promise<string> => {
     try {
-      const newArquivos = [...arquivos]
-      newArquivos[index] = {
-        ...newArquivos[index],
-        status: "uploading",
-        progress: 0,
-      }
-      setArquivos(newArquivos)
+      const newArquivos = [...arquivos];
+      newArquivos[index] = { ...newArquivos[index], status: "uploading", progress: 0 };
+      setArquivos(newArquivos);
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("label", label)
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("rotulo", label);
+      formData.append("editalId", "temp"); // Será substituído após criar o edital
 
       const progressInterval = setInterval(() => {
         setArquivos((prev) => {
-          const updated = [...prev]
-          if (updated[index] && updated[index].progress !== undefined && updated[index].progress < 90) {
-            updated[index] = {
-              ...updated[index],
-              progress: (updated[index].progress || 0) + 10,
-            }
+          const updated = [...prev];
+          if (updated[index].progress !== undefined && updated[index].progress! < 90) {
+            updated[index].progress = (updated[index].progress || 0) + 10;
           }
-          return updated
-        })
-      }, 300)
+          return updated;
+        });
+      }, 300);
 
-      // Usar sistema de arquivos local diretamente em vez da API
-      try {
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        })
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        clearInterval(progressInterval)
+      clearInterval(progressInterval);
 
-        if (!response.ok) {
-          console.error("Erro na resposta da API:", await response.text());
-          throw new Error("Erro ao fazer upload do arquivo")
-        }
-
-        const data = await response.json()
-        console.log("Resposta do upload:", data);
-
-        setArquivos((prev) => {
-          const updated = [...prev]
-          updated[index] = {
-            ...updated[index],
-            status: "success",
-            progress: 100,
-            url: data.url,
-          }
-          return updated
-        })
-
-        return data.url
-      } catch (uploadError) {
-        console.error("Erro detalhado no upload:", uploadError);
-        throw uploadError;
+      if (!response.ok) {
+        throw new Error("Erro ao fazer upload do arquivo");
       }
-    } catch (error) {
-      console.error("Erro geral no upload:", error);
+
+      const data = await response.json();
+
       setArquivos((prev) => {
-        const updated = [...prev]
-        updated[index] = {
-          ...updated[index],
-          status: "error",
-        }
-        return updated
-      })
-      throw error
+        const updated = [...prev];
+        updated[index] = { 
+          ...updated[index], 
+          status: "success", 
+          progress: 100, 
+          id: data.id,
+          url: `/api/upload/${data.id}` // URL para download do arquivo
+        };
+        return updated;
+      });
+
+      // Retorna o ID do arquivo no MongoDB
+      return data.id;
+
+    } catch (error) {
+      setArquivos((prev) => {
+        const updated = [...prev];
+        updated[index] = { ...updated[index], status: "error" };
+        return updated;
+      });
+      throw error;
     }
-  }
+  };
+
 
   const handleFileChange = (index: number, file: File) => {
     const newArquivos = [...arquivos]
@@ -252,14 +238,14 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
 
     try {
       const formData = new FormData()
-      const fileUrls: { url: string; rotulo: string }[] = []
+      const fileIds: string[] = []
 
       for (let i = 0; i < arquivos.length; i++) {
         const { file, label } = arquivos[i]
         if (file) {
           try {
-            const url = await uploadFile(file, label, i)
-            fileUrls.push({ url, rotulo: label })
+            const fileId = await uploadFile(file, label, i)
+            fileIds.push(fileId)
           } catch (error) {
             console.error("Erro ao fazer upload do arquivo:", error)
             toast({
@@ -282,9 +268,9 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
         formData.append("dataEncerramento", dataEncerramento?.toISOString())
       }
 
-      fileUrls.forEach(({ url, rotulo }) => {
-        formData.append("arquivos", url)
-        formData.append("labels", rotulo)
+      // Adicionar IDs dos arquivos
+      fileIds.forEach((id) => {
+        formData.append("arquivosIds", id)
       })
 
       const response = await fetch("/api/editais", {

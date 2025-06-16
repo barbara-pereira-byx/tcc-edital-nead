@@ -74,32 +74,32 @@ export async function PUT(
     },
   })
 
-  const urlsNovos = arquivos.map((a: { url: string }) => a.url)
+  // Obter IDs dos arquivos enviados
+  const idsNovos = arquivos.map((a: { id: string }) => a.id).filter(Boolean)
+  
+  // Encontrar arquivos que não estão na nova lista para remover
   const arquivosParaRemover = editalExistente.arquivos.filter(
-    (a) => !urlsNovos.includes(a.url)
+    (a) => !idsNovos.includes(a.id)
   )
 
-  await Promise.all(
-    arquivosParaRemover.map((arquivo: { id: string }) =>
-      prisma.arquivoEdital.delete({ where: { id: arquivo.id } })
+  // Remover arquivos que não estão mais na lista
+  if (arquivosParaRemover.length > 0) {
+    await Promise.all(
+      arquivosParaRemover.map((arquivo: { id: string }) =>
+        prisma.arquivoEdital.delete({ where: { id: arquivo.id } })
+      )
     )
-  )
+  }
 
-  await prisma.arquivoEdital.deleteMany({
-    where: { editalId: id },
-  })
-
-  await Promise.all(
-    arquivos.map((a: { url: string; rotulo: string }) =>
-      prisma.arquivoEdital.create({
-        data: {
-          url: a.url,
-          rotulo: a.rotulo,
-          editalId: id,
-        },
+  // Atualizar rótulos dos arquivos existentes
+  for (const arquivo of arquivos) {
+    if (arquivo.id) {
+      await prisma.arquivoEdital.update({
+        where: { id: arquivo.id },
+        data: { rotulo: arquivo.rotulo }
       })
-    )
-  )
+    }
+  }
 
   return NextResponse.json({ id: editalAtualizado.id })
 }

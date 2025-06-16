@@ -49,8 +49,8 @@ model Edital {
 
 model ArquivoEdital {
   id                String              @id @default(cuid())
-  url               String
   rotulo            String
+  arquivo           Bytes               // Campo para armazenar o arquivo binário
   edital            Edital?             @relation(fields: [editalId], references: [id]) // Relacionamento com Edital
   editalId         String?
 }

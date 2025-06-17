@@ -40,7 +40,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       where: { formularioUsuarioId: params.id },
       include: {
         campo: true,
-        arquivo: true,
+        arquivos: true,
       },
       orderBy: {
         campoFormularioId: "asc",

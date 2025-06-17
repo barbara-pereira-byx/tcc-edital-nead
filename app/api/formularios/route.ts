@@ -3,13 +3,15 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
-// Helper function to convert string type to integer
-function convertTipoToInt(tipo: string): number {
+// Helper function to convert string or number type to integer
+function convertTipoToInt(tipo: string | number): number {
+  if (typeof tipo === 'number') return tipo;
   return Number.parseInt(tipo, 10)
 }
 
-// Helper function to convert boolean to integer (0/1)
-function convertBoolToInt(value: boolean): number {
+// Helper function to convert boolean or number to integer (0/1)
+function convertBoolToInt(value: boolean | number): number {
+  if (typeof value === 'number') return value;
   return value ? 1 : 0
 }
 
@@ -42,25 +44,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "O edital especificado não existe" }, { status: 404 })
     }
 
-    // Criar o formulário com editalId diretamente
-    const formulario = await prisma.formulario.create({
-      data: {
-        titulo,
-        dataInicio: new Date(dataInicio),
-        dataFim: new Date(dataFim),
-        editalId: editalId, // Usar editalId diretamente
-      },
+    // Verificar se já existe um formulário para este edital
+    const formularioExistente = await prisma.formulario.findUnique({
+      where: { editalId },
     })
 
-    // Criar os campos do formulário com ordem
+    let formulario;
+
+    if (formularioExistente) {
+      // Atualizar o formulário existente
+      formulario = await prisma.formulario.update({
+        where: { id: formularioExistente.id },
+        data: {
+          titulo,
+          dataInicio: new Date(dataInicio),
+          dataFim: new Date(dataFim),
+        },
+      })
+
+      // Remover campos existentes para evitar duplicação
+      await prisma.campoFormulario.deleteMany({
+        where: { formularioId: formulario.id },
+      })
+    } else {
+      // Criar um novo formulário
+      formulario = await prisma.formulario.create({
+        data: {
+          titulo,
+          dataInicio: new Date(dataInicio),
+          dataFim: new Date(dataFim),
+          editalId: editalId,
+        },
+      })
+    }
+
+    // Criar os campos do formulário com ordem, categoria e opções
     for (const campo of campos) {
       await prisma.campoFormulario.create({
         data: {
-          rotulo: campo.nome,
+          rotulo: String(campo.rotulo || campo.nome || "Campo sem nome"), // Garantir que rotulo seja string
           tipo: convertTipoToInt(campo.tipo),
           obrigatorio: convertBoolToInt(campo.obrigatorio),
-          ordem: campo.ordem || 0, // Incluir ordem com fallback
-          formularioId: formulario.id,
+          ordem: Number(campo.ordem || 0), // Incluir ordem com fallback
+          categoria: String(campo.categoria || "Dados Pessoais"), // Garantir que categoria seja string
+          formularioId: String(formulario.id),
         },
       })
     }

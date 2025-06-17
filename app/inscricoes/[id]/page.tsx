@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, FileText, Download } from "lucide-react"
+import { ChevronLeft, FileText, Download, Eye } from "lucide-react"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,7 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
       campos: {
         include: {
           campo: true,
+          arquivos: true,
         },
         orderBy: {
           campo: {
@@ -99,47 +100,126 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
             </div>
           </div>
 
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Dados da Inscrição</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {inscricao.formulario.campos.map((campoFormulario) => {
-                // Encontrar a resposta correspondente a este campo
-                const resposta = inscricao.campos.find(r => r.campoFormularioId === campoFormulario.id)
-                const rotulo = campoFormulario.rotulo.includes("|") ? campoFormulario.rotulo.split("|")[0] : campoFormulario.rotulo
-                const isArquivo = campoFormulario.tipo === 6
+          {/* Agrupar campos por categoria */}
+          {(() => {
+            // Definir a ordem padrão das categorias
+            const categoriasPadrao = [
+              "Dados Pessoais",
+              "Identidade",
+              "Endereço",
+              "Contato",
+              "Documentos"
+            ];
+            
+            // Agrupar campos por categoria
+            const categorias: Record<string, any[]> = {};
+            
+            inscricao.formulario.campos.forEach((campo) => {
+              const categoria = campo.categoria || "Dados Pessoais";
+              if (!categorias[categoria]) {
+                categorias[categoria] = [];
+              }
+              categorias[categoria].push(campo);
+            });
+            
+            // Criar lista ordenada de categorias (categorias padrão primeiro, depois as personalizadas)
+            const todasCategorias = Object.keys(categorias);
+            const ordemCategorias = [
+              ...categoriasPadrao.filter(cat => todasCategorias.includes(cat)),
+              ...todasCategorias.filter(cat => !categoriasPadrao.includes(cat))
+            ];
+            
+            inscricao.formulario.campos.forEach((campo) => {
+              const categoria = campo.categoria || "Dados Pessoais";
+              if (!categorias[categoria]) {
+                categorias[categoria] = [];
+              }
+              categorias[categoria].push(campo);
+            });
+            
+            // Ordenar campos dentro de cada categoria pela ordem
+            Object.keys(categorias).forEach(categoria => {
+              categorias[categoria].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            });
+            
+            return ordemCategorias.map(categoria => {
+              const camposCategoria = categorias[categoria];
+              if (!camposCategoria || camposCategoria.length === 0) return null;
+              
+              return (
+                <Card key={categoria} className="mb-6">
+                  <CardHeader>
+                    <CardTitle>{categoria}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {camposCategoria.map((campoFormulario) => {
+                      // Encontrar a resposta correspondente a este campo
+                      const resposta = inscricao.campos.find(r => r.campoFormularioId === campoFormulario.id)
+                      const rotulo = campoFormulario.rotulo.includes("|") ? campoFormulario.rotulo.split("|")[0] : campoFormulario.rotulo
+                      const isArquivo = campoFormulario.tipo === 6
 
-                return (
-                  <div key={campoFormulario.id} className="grid grid-cols-3 gap-4 py-2 border-b">
-                    <div className="font-medium">{rotulo}</div>
-                    <div className="col-span-2">
-                      {resposta ? (
-                        isArquivo ? (
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-600" />
-                            <span>{resposta.valor || "-"}</span>
-                            <a 
-                              href={`/api/arquivos/${resposta.id}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 ml-2"
-                            >
-                              <Download className="h-4 w-4 mr-1" /> Abrir
-                            </a>
+                      return (
+                        <div key={campoFormulario.id} className="grid grid-cols-3 gap-4 py-2 border-b">
+                          <div className="font-medium">{rotulo}</div>
+                          <div className="col-span-2">
+                            {resposta ? (
+                              isArquivo ? (
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <FileText className="h-4 w-4 text-blue-600" />
+                                    <span>{resposta.valor || "-"}</span>
+                                  </div>
+                                  
+                                  {/* Lista de arquivos */}
+                                  {resposta.arquivos && resposta.arquivos.length > 0 ? (
+                                    <div className="space-y-2 mt-2">
+                                      {resposta.arquivos.map((arquivo) => (
+                                        <div key={arquivo.id} className="flex items-center justify-between bg-slate-50 p-2 rounded-md border">
+                                          <div className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-blue-500" />
+                                            <span className="text-sm">{arquivo.nomeOriginal}</span>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <a 
+                                              href={`/api/upload-usuario/${arquivo.id}`} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                              title="Visualizar"
+                                            >
+                                              <Eye className="h-4 w-4" />
+                                            </a>
+                                            <a 
+                                              href={`/api/upload-usuario/${arquivo.id}?download=true`} 
+                                              download
+                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                              title="Baixar"
+                                            >
+                                              <Download className="h-4 w-4" />
+                                            </a>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-slate-500">Nenhum arquivo disponível</div>
+                                  )}
+                                </div>
+                              ) : (
+                                resposta.valor || "-"
+                              )
+                            ) : (
+                              "-"
+                            )}
                           </div>
-                        ) : (
-                          resposta.valor || "-"
-                        )
-                      ) : (
-                        "-"
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
+                        </div>
+                      )
+                    })}
+                  </CardContent>
+                </Card>
+              );
+            });
+          })()}
 
           <Card>
             <CardHeader>

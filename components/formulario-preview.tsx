@@ -77,29 +77,80 @@ export function FormularioPreview({ formulario }: FormularioPreviewProps) {
     }
   }
 
+  // Agrupar campos por categoria
+  const agruparPorCategoria = () => {
+    const categorias: Record<string, any[]> = {};
+    
+    // Definir a ordem padrão das categorias
+    const categoriasPadrao = [
+      "Dados Pessoais",
+      "Identidade",
+      "Endereço",
+      "Contato",
+      "Documentos"
+    ];
+    
+    // Agrupar campos por categoria
+    formulario.campos.forEach((campo: any) => {
+      const categoria = campo.categoria || "Dados Pessoais";
+      if (!categorias[categoria]) {
+        categorias[categoria] = [];
+      }
+      categorias[categoria].push(campo);
+    });
+    
+    // Ordenar campos dentro de cada categoria pela ordem
+    Object.keys(categorias).forEach(categoria => {
+      categorias[categoria].sort((a: any, b: any) => a.ordem - b.ordem);
+    });
+    
+    // Criar lista ordenada de categorias (categorias padrão primeiro, depois as personalizadas)
+    const todasCategorias = Object.keys(categorias);
+    const ordemCategorias = [
+      ...categoriasPadrao.filter(cat => todasCategorias.includes(cat)),
+      ...todasCategorias.filter(cat => !categoriasPadrao.includes(cat))
+    ];
+    
+    return { categorias, ordemCategorias };
+  };
+  
+  const { categorias, ordemCategorias } = agruparPorCategoria();
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <p className="text-muted-foreground italic mb-4">
         Esta é uma visualização dos campos do formulário. Os usuários preencherão estes campos ao se inscreverem no
         edital.
       </p>
 
-      {formulario.campos.map((campo: any) => (
-        <Card key={campo.id} className="border border-slate-200">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="font-medium">
-                {campo.rotulo.includes("|") ? campo.rotulo.split("|")[0] : campo.rotulo}
-                {campo.obrigatorio === 1 && <span className="text-red-500 ml-1">*</span>}
-              </Label>
-              <span className="text-xs text-muted-foreground px-2 py-1 bg-slate-100 rounded-full">
-                {campo.obrigatorio === 1 ? "Obrigatório" : "Opcional"}
-              </span>
+      {ordemCategorias.map(categoria => {
+        const camposCategoria = categorias[categoria];
+        if (!camposCategoria || camposCategoria.length === 0) return null;
+        
+        return (
+          <div key={categoria} className="space-y-4">
+            <h2 className="text-xl font-semibold border-b pb-2">{categoria}</h2>
+            <div className="space-y-4 pl-2">
+              {camposCategoria.map((campo: any) => (
+                <Card key={campo.id} className="border border-slate-200">
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-medium">
+                        {campo.rotulo.includes("|") ? campo.rotulo.split("|")[0] : campo.rotulo}
+                        {campo.obrigatorio === 1 && <span className="text-red-500 ml-1">*</span>}
+                      </Label>
+                      <span className="text-xs text-muted-foreground px-2 py-1 bg-slate-100 rounded-full">
+                        {campo.obrigatorio === 1 ? "Obrigatório" : "Opcional"}
+                      </span>
+                    </div>
+                    {renderCampo(campo)}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            {renderCampo(campo)}
-          </CardContent>
-        </Card>
-      ))}
+          </div>
+        );
+      })}
     </div>
   )
 }

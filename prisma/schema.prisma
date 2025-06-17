@@ -74,6 +74,7 @@ model CampoFormulario {
   tipo              Int                 // 0: texto, 1: textarea, 2: radio, 3: select, 4: checkbox, 5: data, 6: arquivo
   obrigatorio       Int                 // 0: não, 1: sim
   ordem             Int?
+  categoria         String?             // Categoria do campo: Dados Pessoais, Identidade, Endereço, Contato, Documentos
   formulario        Formulario          @relation(fields: [formularioId], references: [id], onDelete: Cascade)
   formularioId      String
   respostas         FormularioUsuarioCampo[]
@@ -108,21 +109,20 @@ model FormularioUsuarioCampo {
   campoFormularioId String
   inscricao         FormularioUsuario   @relation(fields: [formularioUsuarioId], references: [id], onDelete: Cascade)
   formularioUsuarioId String
-  arquivo           ArquivoUsuario?     // Relação opcional com um arquivo (para campos do tipo arquivo)
+  arquivos          ArquivoUsuario[]    // Relação com múltiplos arquivos (para campos do tipo arquivo)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
 
-// Nova tabela para armazenar arquivos enviados pelos usuários
+// Tabela para armazenar arquivos enviados pelos usuários
 model ArquivoUsuario {
   id                String                  @id @default(cuid())
   nomeOriginal      String                  // Nome original do arquivo
-  nomeArmazenado    String                  // Nome do arquivo no sistema de arquivos
+  arquivo           Bytes                   // Conteúdo do arquivo em formato binário
   tamanho           Int                     // Tamanho do arquivo em bytes
   tipo              String                  // Tipo MIME do arquivo
-  caminho           String                  // Caminho relativo para o arquivo
-  campo             FormularioUsuarioCampo? @relation(fields: [campoId], references: [id], onDelete: Cascade)
-  campoId           String?                 @unique // Um campo pode ter apenas um arquivo
+  campo             FormularioUsuarioCampo  @relation(fields: [campoId], references: [id], onDelete: Cascade)
+  campoId           String                  // Relação com o campo (sem @unique para permitir múltiplos arquivos)
   inscricao         FormularioUsuario       @relation(fields: [inscricaoId], references: [id], onDelete: Cascade)
   inscricaoId       String                  // Relação com a inscrição
   createdAt         DateTime                @default(now())

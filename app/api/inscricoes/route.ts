@@ -157,60 +157,64 @@ export async function POST(req: Request) {
 
     // Processar cada campo do formulário
     for (const campo of formulario.campos) {
-      const value = formData.get(campo.id)
-
-      if (value === null) continue
-
       // Verificar se é um campo de arquivo
-      if (campo.tipo === 6 && value instanceof File) {
-        const file = value as File
-
-        try {
-          console.log(`Processando arquivo ${file.name} para o campo ${campo.id}`);
-          
-          // Gerar um nome único para o arquivo sem fazer upload
-          const fileExt = file.name.split('.').pop() || '';
-          const nomeArmazenado = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
-          const storagePath = `inscricoes/${session.user.id}/${inscricao.id}/${nomeArmazenado}`;
-          
-          // Criar o registro do campo com o valor sendo o nome original do arquivo
+      if (campo.tipo === 6) {
+        // Obter todos os arquivos para este campo
+        const files = formData.getAll(campo.id);
+        
+        if (files.length > 0) {
+          // Criar o registro do campo
           const campoResult = await prisma.formularioUsuarioCampo.create({
             data: {
-              valor: file.name, // Nome original do arquivo
+              valor: files.length > 1 ? `${files.length} arquivos anexados` : files[0] instanceof File ? (files[0] as File).name : "",
               campoFormularioId: campo.id,
               formularioUsuarioId: inscricao.id,
             },
-          })
+          });
           
-          // Criar o registro do arquivo associado ao campo
-          await prisma.arquivoUsuario.create({
-            data: {
-              nomeOriginal: file.name,
-              nomeArmazenado: nomeArmazenado,
-              tamanho: file.size,
-              tipo: file.type,
-              caminho: storagePath,
-              campoId: campoResult.id, // Associar ao campo
-              inscricaoId: inscricao.id,
-            },
-          })
-          
-          console.log(`Arquivo registrado com sucesso: ${storagePath}`);
-        } catch (error) {
-          console.error("Erro ao processar arquivo:", error)
-          // Continuar com os outros campos mesmo se houver erro no arquivo
+          // Processar cada arquivo
+          for (const fileItem of files) {
+            if (fileItem instanceof File) {
+              const file = fileItem as File;
+              
+              try {
+                console.log(`Processando arquivo ${file.name} para o campo ${campo.id}`);
+                
+                // Processar o arquivo
+                const arrayBuffer = await file.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                
+                // Criar o registro do arquivo
+                await prisma.arquivoUsuario.create({
+                  data: {
+                    nomeOriginal: file.name,
+                    arquivo: buffer,
+                    tamanho: file.size,
+                    tipo: file.type,
+                    campoId: campoResult.id,
+                    inscricaoId: inscricao.id,
+                  },
+                });
+                
+                console.log(`Arquivo ${file.name} processado com sucesso`);
+              } catch (error) {
+                console.error(`Erro ao processar arquivo ${file.name}:`, error);
+              }
+            }
+          }
         }
       } else {
         // Campo normal (não arquivo)
-        const campoPromise = prisma.formularioUsuarioCampo.create({
+        const value = formData.get(campo.id);
+        if (value === null) continue;
+        
+        await prisma.formularioUsuarioCampo.create({
           data: {
             valor: value.toString(),
             campoFormularioId: campo.id,
             formularioUsuarioId: inscricao.id,
           },
-        })
-
-        await campoPromise
+        });
       }
     }
 

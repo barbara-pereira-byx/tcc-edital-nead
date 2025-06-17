@@ -348,18 +348,46 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                 <div className="font-medium">{rotulo}</div>
                                 <div className="col-span-2">
                                   {isArquivo ? (
-                                    <div className="flex items-center gap-2 max-w-full">
-                                      <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                                      <span className="truncate max-w-[calc(100%-4rem)] block">{resposta.valor || "-"}</span>
-                                      <Button variant="outline" size="sm" asChild className="flex-shrink-0 ml-2">
-                                        <a
-                                          href={`/api/arquivos/${resposta.id}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                        >
-                                          <Download className="h-4 w-4 mr-1" /> Abrir
-                                        </a>
-                                      </Button>
+                                    <div className="flex flex-col gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                        <span className="truncate max-w-[calc(100%-4rem)] block">{resposta.valor || "-"}</span>
+                                      </div>
+                                      
+                                      {/* Lista de arquivos */}
+                                      {resposta.arquivos && resposta.arquivos.length > 0 ? (
+                                        <div className="space-y-2 mt-2">
+                                          {resposta.arquivos.map((arquivo: any) => (
+                                            <div key={arquivo.id} className="flex items-center justify-between bg-slate-50 p-2 rounded-md border">
+                                              <div className="flex items-center gap-2">
+                                                <FileText className="h-4 w-4 text-blue-500" />
+                                                <span className="text-sm truncate max-w-[200px]">{arquivo.nomeOriginal}</span>
+                                              </div>
+                                              <div className="flex gap-2">
+                                                <Button variant="outline" size="sm" asChild title="Visualizar">
+                                                  <a 
+                                                    href={`/api/upload-usuario/${arquivo.id}`} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                  >
+                                                    <Eye className="h-4 w-4" />
+                                                  </a>
+                                                </Button>
+                                                <Button variant="outline" size="sm" asChild title="Baixar">
+                                                  <a 
+                                                    href={`/api/upload-usuario/${arquivo.id}?download=true`} 
+                                                    download
+                                                  >
+                                                    <Download className="h-4 w-4" />
+                                                  </a>
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="text-sm text-slate-500">Nenhum arquivo disponível</div>
+                                      )}
                                     </div>
                                   ) : (
                                     resposta.valor || "-"
@@ -380,7 +408,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
 
                 <TabsContent value="anexos">
                   <div className="space-y-4">
-                    {respostas?.some((r: any) => r.campo?.tipo === 6) ? (
+                    {respostas?.some((r: any) => r.campo?.tipo === 6 && r.arquivos?.length > 0) ? (
                       respostas
                         .filter((r: any) => r.campo?.tipo === 6)
                         .map((resposta: any) => {
@@ -392,19 +420,45 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                             : "Arquivo"
 
                           return (
-                            <div key={resposta.id} className="flex items-center justify-between p-3 border rounded-lg">
-                              <div className="flex items-center gap-3">
+                            <div key={resposta.id} className="p-3 border rounded-lg">
+                              <div className="flex items-center gap-3 mb-2">
                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                 <div>
                                   <p className="font-medium">{rotulo}</p>
                                   <p className="text-xs text-muted-foreground">{resposta.valor}</p>
                                 </div>
                               </div>
-                              <Button variant="outline" size="sm" asChild>
-                                <a href={`/api/arquivos/${resposta.id}`} target="_blank" rel="noopener noreferrer">
-                                  <Download className="h-4 w-4 mr-1" /> Abrir
-                                </a>
-                              </Button>
+                              
+                              {/* Lista de arquivos */}
+                              {resposta.arquivos && resposta.arquivos.length > 0 ? (
+                                <div className="space-y-2 mt-3 pl-8">
+                                  {resposta.arquivos.map((arquivo: any) => (
+                                    <div key={arquivo.id} className="flex items-center justify-between bg-slate-50 p-2 rounded-md border">
+                                      <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-blue-500" />
+                                        <span className="text-sm">{arquivo.nomeOriginal}</span>
+                                        <span className="text-xs text-slate-500">
+                                          ({Math.round(arquivo.tamanho / 1024)} KB)
+                                        </span>
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <Button variant="outline" size="sm" asChild title="Visualizar">
+                                          <a href={`/api/upload-usuario/${arquivo.id}`} target="_blank" rel="noopener noreferrer">
+                                            <Eye className="h-4 w-4" />
+                                          </a>
+                                        </Button>
+                                        <Button variant="outline" size="sm" asChild title="Baixar">
+                                          <a href={`/api/upload-usuario/${arquivo.id}?download=true`} download>
+                                            <Download className="h-4 w-4" />
+                                          </a>
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-sm text-slate-500 pl-8">Nenhum arquivo disponível</div>
+                              )}
                             </div>
                           )
                         })

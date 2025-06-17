@@ -23,8 +23,9 @@ interface Campo {
   tipo: string
   obrigatorio: boolean
   tamanho: string
-  opcoes: string
   ordem: number
+  categoria: string
+  rotulo?: string // Para armazenar as opções dos campos de seleção
 }
 
 export function FormularioForm({ editalId, onFormularioCreated }: FormularioFormProps) {
@@ -36,24 +37,242 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
   const [formularioId, setFormularioId] = useState<string | undefined>(undefined)
+  // Usar localStorage para persistir as categorias entre sessões
+  const categoriasIniciais = [
+    "Dados Pessoais",
+    "Identidade",
+    "Endereço",
+    "Contato",
+    "Documentos"
+  ];
+  
+  const [categorias, setCategorias] = useState<string[]>(() => {
+    // Tentar recuperar categorias do localStorage
+    if (typeof window !== 'undefined') {
+      const categoriasArmazenadas = localStorage.getItem('formulario-categorias');
+      if (categoriasArmazenadas) {
+        try {
+          return JSON.parse(categoriasArmazenadas);
+        } catch (e) {
+          console.error("Erro ao carregar categorias do localStorage:", e);
+        }
+      }
+    }
+    return categoriasIniciais;
+  })
+  const [novaCategoria, setNovaCategoria] = useState("")
+  const [mostrarCampoNovaCategoria, setMostrarCampoNovaCategoria] = useState<number | null>(null)
   const [campos, setCampos] = useState<Campo[]>([
+    // Dados Pessoais
     {
       id: "1",
-      nome: "Nome Completo",
+      nome: "CPF",
       tipo: "0",
       obrigatorio: true,
-      tamanho: "100",
-      opcoes: "",
+      tamanho: "14",
       ordem: 1,
+      categoria: "Dados Pessoais"
     },
     {
       id: "2",
+      nome: "Nome Completo",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "150",
+      ordem: 2,
+      categoria: "Dados Pessoais"
+    },
+    {
+      id: "3",
+      nome: "Sexo",
+      tipo: "3",
+      obrigatorio: true,
+      tamanho: "20",
+      ordem: 3,
+      categoria: "Dados Pessoais",
+      rotulo: "Sexo|Feminino, Masculino, Prefiro não informar"
+    },
+    {
+      id: "4",
+      nome: "Data de Nascimento",
+      tipo: "5",
+      obrigatorio: true,
+      tamanho: "10",
+      ordem: 4,
+      categoria: "Dados Pessoais"
+    },
+    
+    // Identidade
+    {
+      id: "5",
+      nome: "Número da Identidade",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "20",
+      ordem: 5,
+      categoria: "Identidade"
+    },
+    {
+      id: "6",
+      nome: "Órgão Emissor",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "10",
+      ordem: 6,
+      categoria: "Identidade"
+    },
+    {
+      id: "7",
+      nome: "UF da Emissão",
+      tipo: "3",
+      obrigatorio: true,
+      tamanho: "2",
+      ordem: 7,
+      categoria: "Identidade",
+      rotulo: "UF da Emissão|AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO"
+    },
+    {
+      id: "8",
+      nome: "Data da Expedição",
+      tipo: "5",
+      obrigatorio: true,
+      tamanho: "10",
+      ordem: 8,
+      categoria: "Identidade"
+    },
+    
+    // Endereço
+    {
+      id: "9",
+      nome: "CEP",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "9",
+      ordem: 9,
+      categoria: "Endereço"
+    },
+    {
+      id: "10",
+      nome: "Rua",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "150",
+      ordem: 10,
+      categoria: "Endereço"
+    },
+    {
+      id: "11",
+      nome: "Número",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "10",
+      ordem: 11,
+      categoria: "Endereço"
+    },
+    {
+      id: "12",
+      nome: "Bairro",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "100",
+      ordem: 12,
+      categoria: "Endereço"
+    },
+    {
+      id: "13",
+      nome: "Cidade",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "100",
+      ordem: 13,
+      categoria: "Endereço"
+    },
+    {
+      id: "14",
+      nome: "Estado",
+      tipo: "3",
+      obrigatorio: true,
+      tamanho: "2",
+      ordem: 14,
+      categoria: "Endereço",
+      rotulo: "Estado|AC, AL, AP, AM, BA, CE, DF, ES, GO, MA, MT, MS, MG, PA, PB, PR, PE, PI, RJ, RN, RS, RO, RR, SC, SP, SE, TO"
+    },
+    
+    // Contato
+    {
+      id: "15",
       nome: "E-mail",
       tipo: "0",
       obrigatorio: true,
       tamanho: "100",
-      opcoes: "",
-      ordem: 2,
+      ordem: 15,
+      categoria: "Contato"
+    },
+    {
+      id: "16",
+      nome: "Telefone Residencial",
+      tipo: "0",
+      obrigatorio: false,
+      tamanho: "15",
+      ordem: 16,
+      categoria: "Contato"
+    },
+    {
+      id: "17",
+      nome: "Telefone Celular",
+      tipo: "0",
+      obrigatorio: true,
+      tamanho: "15",
+      ordem: 17,
+      categoria: "Contato"
+    },
+    
+    // Documentos
+    {
+      id: "18",
+      nome: "Desejo concorrer para as VAGAS DE AÇÕES AFIRMATIVAS",
+      tipo: "3",
+      obrigatorio: false,
+      tamanho: "3",
+      ordem: 18,
+      categoria: "Documentos",
+      rotulo: "Desejo concorrer para as VAGAS DE AÇÕES AFIRMATIVAS|SIM, NÂO"
+    },
+    {
+      id: "19",
+      nome: "Cópia dos documentos pessoais (frente e verso) do RG e CPF ou Passaporte ou documento equivalente; Para candidato estrangeiro, Carteira de Estrangeiro ou Passaporte com Visto Permanente ou Temporário",
+      tipo: "6",
+      obrigatorio: true,
+      tamanho: "",
+      ordem: 19,
+      categoria: "Documentos"
+    },
+    {
+      id: "20",
+      nome: "Cópia legível (frente e verso) e em um único arquivo da documentação comprobatória da formação acadêmica (diploma e/ou certificado) concebido por Instituição de ensino reconhecida pelo MEC",
+      tipo: "6",
+      obrigatorio: true,
+      tamanho: "",
+      ordem: 20,
+      categoria: "Documentos"
+    },
+    {
+      id: "21",
+      nome: "Para os(as) candidatos(as) que concorrerem nas VAGAS DE RESERVA DE COTAS constante do item 3.3 deste Edital, será exigido o Termo de Autodeclaração, constante do ANEXO III, preenchido e assinado eletronicamente pelo serviçõ gov.br",
+      tipo: "6",
+      obrigatorio: true,
+      tamanho: "",
+      ordem: 21,
+      categoria: "Documentos"
+    },
+    {
+      id: "22",
+      nome: "Além dos documentos listados acima, os candidatos com diplomas de graduação expedidos por universidades estrangeiras deverão enviar cópia legível (frente e verso) do diploma revalidado pela Universidade Pública Brasileira, na forma da lei",
+      tipo: "6",
+      obrigatorio: true,
+      tamanho: "",
+      ordem: 22,
+      categoria: "Documentos"
     },
   ])
 
@@ -82,6 +301,39 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
         setTitulo(tituloEdital)
         setDataInicio(dataInicioEdital)
         setDataFim(dataFimEdital)
+
+        // Verificar se já existe um formulário para este edital
+        try {
+          const formularioResponse = await fetch(`/api/editais/${editalId}/formulario`)
+          if (formularioResponse.ok) {
+            const formularioData = await formularioResponse.json()
+            if (formularioData && formularioData.id) {
+              setFormularioId(formularioData.id)
+              setFormularioCriado(true)
+              
+              // Extrair categorias únicas dos campos existentes
+              if (formularioData.campos && formularioData.campos.length > 0) {
+                const categoriasExistentes = new Set(categorias)
+                formularioData.campos.forEach((campo: any) => {
+                  if (campo.categoria && !categoriasExistentes.has(campo.categoria)) {
+                    categoriasExistentes.add(campo.categoria)
+                  }
+                })
+                const todasCategorias = Array.from(categoriasExistentes);
+                setCategorias(todasCategorias)
+                
+                // Salvar no localStorage
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('formulario-categorias', JSON.stringify(todasCategorias));
+                }
+              }
+              
+              return // Não criar um novo formulário se já existe
+            }
+          }
+        } catch (error) {
+          console.log("Nenhum formulário encontrado para este edital, criando um novo...")
+        }
 
         if (tituloEdital && dataInicioEdital && dataFimEdital) {
           const criarResponse = await fetch("/api/formularios", {
@@ -139,8 +391,8 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
         tipo: "0",
         obrigatorio: true,
         tamanho: "100",
-        opcoes: "",
         ordem: maiorOrdem + 1,
+        categoria: categorias.length > 0 ? categorias[0] : "Dados Pessoais", // Usar a primeira categoria disponível
       },
     ])
   }
@@ -246,6 +498,13 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     }
 
     try {
+      // Log das categorias antes do envio
+      console.log("Categorias antes do envio:", categorias);
+      console.log("Campos com suas categorias:", campos.map(c => ({ 
+        nome: c.nome.substring(0, 20) + "...", 
+        categoria: c.categoria 
+      })));
+      
       const camposOrdenados = campos.map((campo, index) => ({
         ...campo,
         ordem: index + 1,
@@ -269,10 +528,13 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
             // Mapear campos para o formato esperado pela API de atualização
             const camposParaAPI = camposOrdenados.map((campo) => ({
               id: campo.id,
-              rotulo: campo.nome, // API de atualização espera 'rotulo'
+              nome: campo.nome, // Enviar o nome do campo
+              rotulo: campo.tipo === "3" || campo.tipo === "4" ? campo.rotulo : "", // Rotulo apenas para select e checkbox
               tipo: Number.parseInt(campo.tipo),
               obrigatorio: campo.obrigatorio ? 1 : 0,
               ordem: campo.ordem,
+              categoria: campo.categoria, // Enviar a categoria exatamente como está
+              tamanho: campo.tamanho || "255"
             }))
 
             response = await fetch(`/api/formularios/${formularioId}`, {
@@ -360,6 +622,8 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
               tipo: campo.tipo,
               obrigatorio: campo.obrigatorio,
               ordem: campo.ordem,
+              categoria: campo.categoria,
+              opcoes: campo.rotulo || "", // Usar o campo rotulo para as opções
             })),
             editalId,
           }),
@@ -536,6 +800,100 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
                 />
                 <Label htmlFor={`obrigatorio-${index}`}>Obrigatório</Label>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor={`categoria-${index}`}>Categoria</Label>
+                {mostrarCampoNovaCategoria === index ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={novaCategoria}
+                      onChange={(e) => setNovaCategoria(e.target.value)}
+                      placeholder="Digite o nome da nova categoria"
+                      className="flex-1"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        if (novaCategoria.trim() !== "") {
+                          const categoriaTrimmed = novaCategoria.trim();
+                          
+                          // Adicionar a nova categoria à lista global
+                          const novasCategorias = [...categorias, categoriaTrimmed];
+                          setCategorias(novasCategorias);
+                          
+                          // Salvar no localStorage
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem('formulario-categorias', JSON.stringify(novasCategorias));
+                          }
+                          
+                          // Atualizar o campo atual com a nova categoria
+                          const novosCampos = [...campos];
+                          novosCampos[index].categoria = categoriaTrimmed;
+                          setCampos(novosCampos);
+                          
+                          // Limpar e fechar o campo de nova categoria
+                          setNovaCategoria("");
+                          setMostrarCampoNovaCategoria(null);
+                          
+                          // Log para debug
+                          console.log(`Nova categoria adicionada: "${categoriaTrimmed}"`);
+                          console.log("Lista de categorias atualizada:", novasCategorias);
+                        }
+                      }}
+                    >
+                      Adicionar
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setNovaCategoria("");
+                        setMostrarCampoNovaCategoria(null);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select
+                        value={campo.categoria}
+                        onValueChange={(value) => {
+                          if (value === "nova_categoria") {
+                            setMostrarCampoNovaCategoria(index);
+                            return;
+                          }
+                          const novosCampos = [...campos];
+                          novosCampos[index].categoria = value;
+                          setCampos(novosCampos);
+                          console.log(`Categoria selecionada para campo ${index}: ${value}`);
+                        }}
+                      >
+                        <SelectTrigger id={`categoria-${index}`}>
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categorias.map((cat) => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                          <SelectItem value="nova_categoria">+ Nova Categoria</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setMostrarCampoNovaCategoria(index)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {(campo.tipo === "0" || campo.tipo === "1") && (
@@ -556,18 +914,18 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
               </div>
             )}
 
-            {campo.tipo === "3" && (
+            {(campo.tipo === "3" || campo.tipo === "4") && (
               <div className="space-y-2">
-                <Label htmlFor={`opcoes-${index}`}>Opções (separadas por vírgula)</Label>
+                <Label htmlFor={`rotulo-${index}`}>{campo.tipo === "3" ? "Opções (separadas por vírgula)" : "Texto do Checkbox"}</Label>
                 <Input
-                  id={`opcoes-${index}`}
-                  value={campo.opcoes}
+                  id={`rotulo-${index}`}
+                  value={campo.rotulo || ""}
                   onChange={(e) => {
                     const novosCampos = [...campos]
-                    novosCampos[index].opcoes = e.target.value
+                    novosCampos[index].rotulo = e.target.value
                     setCampos(novosCampos)
                   }}
-                  placeholder="Ex: Opção 1, Opção 2, Opção 3"
+                  placeholder={campo.tipo === "3" ? "Ex: Opção 1, Opção 2, Opção 3" : "Ex: Concordo com os termos"}
                 />
               </div>
             )}

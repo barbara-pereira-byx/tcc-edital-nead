@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth/next"
 import { redirect, notFound } from "next/navigation"
 import Link from "next/link"
-import { ChevronLeft, FileText, Download, Eye } from "lucide-react"
+import { ChevronLeft, FileText } from "lucide-react"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
@@ -44,8 +44,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
     },
   })
   
-  console.log("Campos da inscrição:", inscricao?.campos?.length || 0);
-
   if (!inscricao) {
     notFound()
   }
@@ -129,14 +127,6 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
               ...todasCategorias.filter(cat => !categoriasPadrao.includes(cat))
             ];
             
-            inscricao.formulario.campos.forEach((campo) => {
-              const categoria = campo.categoria || "Dados Pessoais";
-              if (!categorias[categoria]) {
-                categorias[categoria] = [];
-              }
-              categorias[categoria].push(campo);
-            });
-            
             // Ordenar campos dentro de cada categoria pela ordem
             Object.keys(categorias).forEach(categoria => {
               categorias[categoria].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
@@ -178,24 +168,28 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
                                           <div className="flex items-center gap-2">
                                             <FileText className="h-4 w-4 text-blue-500" />
                                             <span className="text-sm">{arquivo.nomeOriginal}</span>
+                                            <span className="text-xs text-slate-500">
+                                              ({Math.round(arquivo.tamanho / 1024)} KB)
+                                            </span>
                                           </div>
                                           <div className="flex gap-2">
-                                            <a 
-                                              href={`/api/upload-usuario/${arquivo.id}`} 
-                                              target="_blank" 
+                                            <a
+                                              href={`/api/arquivo/${arquivo.id}`}
+                                              target="_blank"
                                               rel="noopener noreferrer"
-                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
                                               title="Visualizar"
-                                            >
-                                              <Eye className="h-4 w-4" />
-                                            </a>
-                                            <a 
-                                              href={`/api/upload-usuario/${arquivo.id}?download=true`} 
-                                              download
                                               className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
-                                              title="Baixar"
                                             >
-                                              <Download className="h-4 w-4" />
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            </a>
+                                            <a
+                                              href={`/api/arquivo/${arquivo.id}?download=true`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              title="Baixar"
+                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                                             </a>
                                           </div>
                                         </div>

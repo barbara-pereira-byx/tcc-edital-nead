@@ -3,14 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { FileIcon, Download, File, FileText, FileImage } from "lucide-react";
-
-interface FileAttachment {
-  id: string;
-  nomeOriginal: string;
-  tipo: string;
-  tamanho: number;
-}
+import { Eye, Download, File, FileText, FileImage, Loader2 } from "lucide-react";
 
 interface FileAttachmentsProps {
   campoId: string;
@@ -18,74 +11,112 @@ interface FileAttachmentsProps {
 }
 
 export function FileAttachments({ campoId, inscricaoId }: FileAttachmentsProps) {
-  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const [arquivos, setArquivos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchFiles = async () => {
+    async function carregarArquivos() {
       try {
-        const response = await fetch(`/api/inscricoes/${inscricaoId}/arquivos?campoId=${campoId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setFiles(data);
+        setLoading(true);
+        setError(null);
+        
+        // Buscar diretamente os arquivos do usuário
+        const response = await fetch(`/api/upload-usuario/${inscricaoId}?campoId=${campoId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao buscar arquivos: ${response.status}`);
         }
-      } catch (error) {
-        console.error("Erro ao buscar arquivos:", error);
+        
+        const data = await response.json();
+        console.log("Arquivos carregados:", data);
+        setArquivos(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error("Erro ao carregar arquivos:", err);
+        setError("Não foi possível carregar os arquivos");
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchFiles();
+    }
+    
+    carregarArquivos();
   }, [campoId, inscricaoId]);
 
   const getFileIcon = (tipo: string) => {
+    if (!tipo) return File;
     if (tipo.startsWith("image/")) return FileImage;
     if (tipo.includes("pdf")) return FileText;
     return File;
   };
 
   if (loading) {
-    return <div className="text-sm text-slate-500">Carregando arquivos...</div>;
+    return (
+      <div className="flex items-center gap-2 text-sm text-slate-500">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Carregando arquivos...
+      </div>
+    );
   }
 
-  if (files.length === 0) {
+  if (error) {
+    return <div className="text-sm text-red-500">{error}</div>;
+  }
+
+  if (!arquivos || arquivos.length === 0) {
     return <div className="text-sm text-slate-500">Nenhum arquivo anexado</div>;
   }
 
   return (
     <div className="space-y-2">
-      {files.map((file) => {
-        const FileIconComponent = getFileIcon(file.tipo);
+      {arquivos.map((arquivo) => {
+        const FileIconComponent = getFileIcon(arquivo.tipo);
         
         return (
           <div
-            key={file.id}
+            key={arquivo.id}
             className="flex items-center justify-between bg-slate-50 p-2 rounded-md border"
           >
             <div className="flex items-center gap-2">
               <FileIconComponent size={16} className="text-blue-500" />
               <span className="text-sm truncate max-w-[200px]">
-                {file.nomeOriginal}
+                {arquivo.nomeOriginal}
               </span>
               <span className="text-xs text-slate-500">
-                ({(file.tamanho / 1024).toFixed(1)} KB)
+                ({Math.round(arquivo.tamanho / 1024)} KB)
               </span>
             </div>
-            <a
-              href={`/api/upload-usuario/${file.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
+            <div className="flex gap-2">
+              <a
+                href={`/api/arquivo/${arquivo.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Visualizar"
               >
-                <Download size={14} />
-              </Button>
-            </a>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                >
+                  <Eye size={14} />
+                </Button>
+              </a>
+              <a
+                href={`/api/arquivo/${arquivo.id}?download=true`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Baixar"
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                >
+                  <Download size={14} />
+                </Button>
+              </a>
+            </div>
           </div>
         );
       })}

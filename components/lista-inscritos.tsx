@@ -355,39 +355,43 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                       </div>
                                       
                                       {/* Lista de arquivos */}
-                                      {resposta.arquivos && resposta.arquivos.length > 0 ? (
-                                        <div className="space-y-2 mt-2">
-                                          {resposta.arquivos.map((arquivo: any) => (
-                                            <div key={arquivo.id} className="flex items-center justify-between bg-slate-50 p-2 rounded-md border">
-                                              <div className="flex items-center gap-2">
-                                                <FileText className="h-4 w-4 text-blue-500" />
-                                                <span className="text-sm truncate max-w-[200px]">{arquivo.nomeOriginal}</span>
-                                              </div>
-                                              <div className="flex gap-2">
-                                                <Button variant="outline" size="sm" asChild title="Visualizar">
-                                                  <a 
-                                                    href={`/api/upload-usuario/${arquivo.id}`} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer"
-                                                  >
-                                                    <Eye className="h-4 w-4" />
-                                                  </a>
-                                                </Button>
-                                                <Button variant="outline" size="sm" asChild title="Baixar">
-                                                  <a 
-                                                    href={`/api/upload-usuario/${arquivo.id}?download=true`} 
-                                                    download
-                                                  >
-                                                    <Download className="h-4 w-4" />
-                                                  </a>
-                                                </Button>
-                                              </div>
-                                            </div>
-                                          ))}
+                                  {resposta.arquivos && resposta.arquivos.length > 0 ? (
+                                    <div className="space-y-2 mt-2">
+                                      {resposta.arquivos.map((arquivo) => (
+                                        <div key={arquivo.id} className="flex items-center justify-between bg-slate-50 p-2 rounded-md border">
+                                          <div className="flex items-center gap-2">
+                                            <FileText className="h-4 w-4 text-blue-500" />
+                                            <span className="text-sm">{arquivo.nomeOriginal}</span>
+                                            <span className="text-xs text-slate-500">
+                                              ({Math.round(arquivo.tamanho / 1024)} KB)
+                                            </span>
+                                          </div>
+                                          <div className="flex gap-2">
+                                            <a
+                                              href={`/api/arquivo/${arquivo.id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              title="Visualizar"
+                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            </a>
+                                            <a
+                                              href={`/api/arquivo/${arquivo.id}?download=true`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              title="Baixar"
+                                              className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-2"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-download"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                            </a>
+                                          </div>
                                         </div>
-                                      ) : (
-                                        <div className="text-sm text-slate-500">Nenhum arquivo disponível</div>
-                                      )}
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="text-sm text-slate-500">Nenhum arquivo disponível</div>
+                                  )}
                                     </div>
                                   ) : (
                                     resposta.valor || "-"
@@ -443,12 +447,12 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                       </div>
                                       <div className="flex gap-2">
                                         <Button variant="outline" size="sm" asChild title="Visualizar">
-                                          <a href={`/api/upload-usuario/${arquivo.id}`} target="_blank" rel="noopener noreferrer">
+                                          <a href={`/api/arquivos/${inscricoes.id}/respostas/${arquivo.id}`} target="_blank" rel="noopener noreferrer">
                                             <Eye className="h-4 w-4" />
                                           </a>
                                         </Button>
                                         <Button variant="outline" size="sm" asChild title="Baixar">
-                                          <a href={`/api/upload-usuario/${arquivo.id}?download=true`} download>
+                                          <a href={`/api/arquivos/${inscricoes.id}/respostas/${arquivo.id}?download=true`} download>
                                             <Download className="h-4 w-4" />
                                           </a>
                                         </Button>

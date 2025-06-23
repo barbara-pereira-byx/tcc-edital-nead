@@ -360,7 +360,8 @@ export function FormularioInscricao({ formulario }: FormularioInscricaoProps) {
       "Identidade",
       "Endereço",
       "Contato",
-      "Documentos"
+      "Documentos",
+      "Outros"
     ];
     
     // Agrupar campos por categoria

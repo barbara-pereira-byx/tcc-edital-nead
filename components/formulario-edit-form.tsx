@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,17 +26,17 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   const [dataFim, setDataFim] = useState<Date | undefined>(
     formulario.dataFim ? new Date(formulario.dataFim) : undefined,
   )
-  // Usar localStorage para persistir as categorias entre sessões
+
   const categoriasIniciais = [
     "Dados Pessoais",
     "Identidade",
     "Endereço",
     "Contato",
-    "Documentos"
+    "Documentos",
+    "Outros"
   ];
   
   const [categorias, setCategorias] = useState<string[]>(() => {
-    // Tentar recuperar categorias do localStorage
     if (typeof window !== 'undefined') {
       const categoriasArmazenadas = localStorage.getItem('formulario-categorias');
       if (categoriasArmazenadas) {
@@ -50,6 +49,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
     }
     return categoriasIniciais;
   })
+
   const [novaCategoria, setNovaCategoria] = useState("")
   const [mostrarCampoNovaCategoria, setMostrarCampoNovaCategoria] = useState<number | null>(null)
 
@@ -62,7 +62,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   }
 
   const [campos, setCampos] = useState<CampoComArquivo[]>(() => {
-    // Extrair categorias únicas dos campos existentes
     const categoriasExistentes = new Set(categorias);
     formulario.campos.forEach((campo: any) => {
       if (campo.categoria && !categoriasExistentes.has(campo.categoria)) {
@@ -72,35 +71,31 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
     const todasCategorias = Array.from(categoriasExistentes) as string[];
     setCategorias(todasCategorias);
     
-    // Salvar no localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('formulario-categorias', JSON.stringify(todasCategorias));
     }
     
     return formulario.campos
-      .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0)) // Ordenar pelos campos existentes
+      .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0))
       .map((campo: any, index: number) => {
-        // Para campos existentes, garantir que o formato está correto
-        // Usar o rotulo como nome para campos existentes
         const nome = campo.rotulo || "Campo sem nome";
         let rotulo = "";
         
-        // Para campos de checkbox e select, o rotulo é importante
         if (campo.tipo === 3 || campo.tipo === 4) {
           rotulo = campo.rotulo || "";
         }
         
         return {
           id: campo.id,
-          nome: nome, // Usar rotulo como nome para compatibilidade
-          rotulo: rotulo, // Rotulo específico para checkbox e select
+          nome: nome,
+          rotulo: rotulo,
           tipo: campo.tipo,
           obrigatorio: campo.obrigatorio,
           secao: campo.secao || "Geral",
-          categoria: campo.categoria || categorias[0] || "Dados Pessoais", // Usar categoria do campo ou primeira disponível
-          tamanho: campo.tamanho || "255", // Tamanho padrão para campos de texto
+          categoria: campo.categoria || categorias[0] || "Outros",
+          tamanho: campo.tamanho || "255",
           arquivoFile: null,
-          ordem: campo.ordem || index + 1, // Usar ordem existente ou índice + 1
+          ordem: campo.ordem || index + 1,
           formularioId: campo.formularioId,
           createdAt: campo.createdAt,
           updatedAt: campo.updatedAt,
@@ -118,34 +113,38 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   ]
 
   const adicionarCampo = () => {
-    // Encontrar a maior ordem atual e adicionar 1
-    const maiorOrdem = Math.max(...campos.map((c) => c.ordem || 0), 0)
+    const maiorOrdem = Math.max(...campos.map((c) => c.ordem || 0), 0);
+    
+    // Use a categoria que foi definida ao adicionar um novo campo
+    const categoriaParaCampo = novaCategoria.trim() !== "" ? novaCategoria.trim() : categorias[0] || "Outros";
 
     setCampos([
       ...campos,
       {
-        id: `temp-${Date.now()}`, // Usar timestamp para evitar conflitos
-        nome: "Novo Campo", // Nome padrão inicial
-        rotulo: "", // Rotulo vazio para campos que não são checkbox ou select
+        id: `temp-${Date.now()}`,
+        nome: "Novo Campo",
+        rotulo: "",
         tipo: 0,
         obrigatorio: 1,
         secao: "Geral",
-        categoria: categorias.length > 0 ? categorias[0] : "Dados Pessoais", // Usar a primeira categoria disponível
-        tamanho: "255", // Tamanho padrão para campos de texto
+        categoria: categoriaParaCampo, // Usar a nova categoria se definida
+        tamanho: "255",
         arquivoFile: null,
         ordem: maiorOrdem + 1,
         formularioId: formulario.id,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
-    ])
+    ]);
+
+    // Limpar a nova categoria após adicionar o campo
+    setNovaCategoria("");
   }
 
   const removerCampo = (index: number) => {
     const novosCampos = [...campos]
     novosCampos.splice(index, 1)
 
-    // Reordenar todos os campos após remoção
     const camposReordenados = novosCampos.map((campo, i) => ({
       ...campo,
       ordem: i + 1,
@@ -159,12 +158,10 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
 
     const novosCampos = [...campos]
 
-    // Trocar as posições no array
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index - 1]
     novosCampos[index - 1] = temp
 
-    // Atualizar a ordem baseada na nova posição
     const camposReordenados = novosCampos.map((campo, i) => ({
       ...campo,
       ordem: i + 1,
@@ -178,12 +175,10 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
 
     const novosCampos = [...campos]
 
-    // Trocar as posições no array
     const temp = novosCampos[index]
     novosCampos[index] = novosCampos[index + 1]
     novosCampos[index + 1] = temp
 
-    // Atualizar a ordem baseada na nova posição
     const camposReordenados = novosCampos.map((campo, i) => ({
       ...campo,
       ordem: i + 1,
@@ -226,7 +221,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
       return
     }
 
-    // Verificar se todos os campos têm nome
     for (const campo of campos) {
       if (!campo.nome) {
         toast({
@@ -238,7 +232,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         return
       }
       
-      // Para campos de checkbox e select, verificar se têm rotulo
       if ((campo.tipo === 3 || campo.tipo === 4) && !campo.rotulo) {
         toast({
           title: "Erro ao atualizar formulário",
@@ -250,33 +243,12 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
       }
     }
     
-    // Log para depuração
-    console.log("Campos a serem enviados:", campos.map(c => ({
-      id: c.id,
-      nome: c.nome,
-      rotulo: c.rotulo,
-      tipo: c.tipo,
-      categoria: c.categoria // Incluir categoria no log para verificar
-    })))
-    
-    // Log das categorias disponíveis
-    console.log("Categorias disponíveis:", categorias)
-
     try {
-      // Log das categorias antes do envio
-      console.log("Categorias antes do envio:", categorias);
-      console.log("Campos com suas categorias:", campos.map(c => ({ 
-        nome: c.nome.substring(0, 20) + "...", 
-        categoria: c.categoria 
-      })));
-      
-      // Garantir que os campos estão com ordem sequencial correta
       const camposOrdenados = campos.map((campo, index) => ({
         ...campo,
         ordem: index + 1,
       }))
 
-      // Enviar os dados, excluindo arquivoFile do JSON
       const response = await fetch(`/api/formularios/${formulario.id}`, {
         method: "PUT",
         headers: {
@@ -286,19 +258,15 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           titulo,
           dataInicio,
           dataFim,
-          campos: camposOrdenados.map(({ arquivoFile, ...rest }) => {
-            // Preparar os campos para envio conforme esperado pela API
-            // Garantir que todos os campos necessários sejam enviados
-            return {
-              ...rest,
-              nome: rest.nome || "Campo sem nome", // Garantir que nome nunca seja undefined
-              rotulo: rest.rotulo || "", // Rotulo pode ser vazio para campos que não são checkbox ou select
-              categoria: rest.categoria, // Enviar a categoria exatamente como está
-              tamanho: rest.tamanho || "255", // Tamanho padrão para campos de texto
-              tipo: Number(rest.tipo), // Garantir que tipo seja número
-              obrigatorio: Number(rest.obrigatorio), // Garantir que obrigatorio seja número
-            };
-          }),
+          campos: camposOrdenados.map(({ arquivoFile, ...rest }) => ({
+            ...rest,
+            nome: rest.nome || "Campo sem nome",
+            rotulo: rest.rotulo || "",
+            categoria: rest.categoria,
+            tamanho: rest.tamanho || "255",
+            tipo: Number(rest.tipo),
+            obrigatorio: Number(rest.obrigatorio),
+          })),
         }),
       })
 

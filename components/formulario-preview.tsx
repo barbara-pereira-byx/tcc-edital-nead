@@ -87,7 +87,8 @@ export function FormularioPreview({ formulario }: FormularioPreviewProps) {
       "Identidade",
       "Endereço",
       "Contato",
-      "Documentos"
+      "Documentos",
+      "Outros"
     ];
     
     // Agrupar campos por categoria

@@ -112,7 +112,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
 
-    // Verificar se o edital existe
     const edital = await prisma.edital.findUnique({
       where: { id: params.id },
     })
@@ -121,7 +120,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ message: "Edital não encontrado" }, { status: 404 })
     }
 
-    // Excluir o edital (as seções e tópicos serão excluídos em cascata)
     await prisma.edital.delete({
       where: { id: params.id },
     })
@@ -129,6 +127,6 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Erro ao excluir edital:", error)
-    return NextResponse.json({ message: "Erro ao excluir edital" }, { status: 500 })
+    return NextResponse.json({ message: "Erro interno ao excluir edital" }, { status: 500 })
   }
 }

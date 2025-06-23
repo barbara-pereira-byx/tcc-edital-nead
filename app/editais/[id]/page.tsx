@@ -259,36 +259,25 @@ export default async function EditalPage({ params }: { params: { id: string } })
               <Card>
                 <CardContent className="p-6">
                   {!session ? (
-                    // Usuário não autenticado - mostrar formulário com botão de login
+                    // Usuário não autenticado - mostrar só o modal de login
                     <>
                       <h2 className="text-xl font-semibold mb-6">Formulário de Inscrição</h2>
-                      {edital.formulario ? (
-                        <div className="relative">
-                          <div className="opacity-50 pointer-events-none">
-                            <FormularioPreview formulario={edital.formulario} />
-                          </div>
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-                            <div className="text-center p-6 bg-white rounded-lg shadow-md border border-slate-200 max-w-md">
-                              <p className="text-slate-700 mb-4">
-                                Para se inscrever neste edital, é necessário fazer login.
-                              </p>
-                              <Link href={`/login?callbackUrl=${encodeURIComponent(`/editais/${params.id}`)}`}>
-                                <Button aria-label="Fazer login" className="px-6">
-                                  Fazer Login
-                                </Button>
-                              </Link>
-                            </div>
-                          </div>
+
+                      <div className="flex justify-center">
+                        <div className="text-center p-6 bg-white rounded-lg shadow-md border border-slate-200 max-w-md w-full">
+                          <p className="text-slate-700 mb-4">
+                            Para se inscrever neste edital, é necessário fazer login.
+                          </p>
+                          <Link href={`/login?callbackUrl=${encodeURIComponent(`/editais/${params.id}`)}`}>
+                            <Button aria-label="Fazer login" className="px-6">
+                              Fazer Login
+                            </Button>
+                          </Link>
                         </div>
-                      ) : (
-                        <Alert variant="default" className="bg-slate-50 border-slate-200">
-                          <AlertCircle className="h-4 w-4 text-slate-500" />
-                          <AlertDescription>Este edital não possui formulário configurado.</AlertDescription>
-                        </Alert>
-                      )}
+                      </div>
                     </>
                   ) : isAdmin ? (
-                    // Visualização para administradores - apenas visualizar os campos
+                    // Visualização para administradores
                     <>
                       <h2 className="text-xl font-semibold mb-6">Campos do Formulário</h2>
                       {edital.formulario ? (

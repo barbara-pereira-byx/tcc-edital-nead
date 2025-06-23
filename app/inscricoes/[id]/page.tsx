@@ -106,7 +106,8 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
               "Identidade",
               "Endereço",
               "Contato",
-              "Documentos"
+              "Documentos",
+              "Outros"
             ];
             
             // Agrupar campos por categoria

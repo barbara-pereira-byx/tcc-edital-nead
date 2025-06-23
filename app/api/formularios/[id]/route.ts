@@ -168,7 +168,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
               tipo: convertTipoToInt(campo.tipo),
               obrigatorio: convertBoolToInt(campo.obrigatorio),
               ordem: Number(campo.ordem || 0), // Atualizar ordem com fallback
-              categoria: String(campo.categoria || ""), // Usar a categoria exatamente como foi enviada, sem fallback
+              categoria: campo.categoria !== undefined ? String(campo.categoria) : campoExistente?.categoria, // Usar a categoria exatamente como foi enviada, sem fallback
             },
           })
         } else {

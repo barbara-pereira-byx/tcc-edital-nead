@@ -38,6 +38,8 @@ export function UserManagement({ usuarios }: UserManagementProps) {
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
 
   // Filtrar usuários com base no termo de busca
   const filteredUsers = usuarios.filter(
@@ -177,6 +179,20 @@ export function UserManagement({ usuarios }: UserManagementProps) {
                   as suas inscrições.
                 </span>
               </div>
+
+              {/* Segunda confirmação */}
+              <div className="mt-4 flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="confirm-delete"
+                  checked={confirmDelete}
+                  onChange={(e) => setConfirmDelete(e.target.checked)}
+                  disabled={isLoading}
+                />
+                <label htmlFor="confirm-delete" className="text-sm text-gray-700">
+                  Eu entendo as consequências e desejo prosseguir com a exclusão permanente deste usuário.
+                </label>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -186,7 +202,7 @@ export function UserManagement({ usuarios }: UserManagementProps) {
                 e.preventDefault()
                 deleteUser()
               }}
-              disabled={isLoading}
+              disabled={isLoading || !confirmDelete}  // Só habilita se o checkbox estiver marcado
               className="bg-red-600 hover:bg-red-700 text-white"
             >
               {isLoading ? (

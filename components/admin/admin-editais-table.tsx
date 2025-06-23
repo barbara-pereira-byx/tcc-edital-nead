@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit, Trash2, AlertTriangle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface Edital {
@@ -44,6 +44,7 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [editalToDelete, setEditalToDelete] = useState<string | null>(null)
   const [editalToEncerrar, setEditalToEncerrar] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
 
   const formatDate = (date: Date) => {
@@ -203,7 +204,15 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
                       {/* Botão Excluir */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="icon" title="Excluir edital" onClick={() => setEditalToDelete(edital.id)}>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            title="Excluir edital"
+                            onClick={() => {
+                              setEditalToDelete(edital.id)
+                              setConfirmDelete(false)  // Resetar confirmação ao abrir
+                            }}
+                          >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </AlertDialogTrigger>
@@ -212,14 +221,35 @@ export function AdminEditaisTable({ editais }: AdminEditaisTableProps) {
                             <AlertDialogTitle>Excluir Edital</AlertDialogTitle>
                             <AlertDialogDescription>
                               Tem certeza que deseja excluir este edital? Esta ação não pode ser desfeita.
+
+                              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
+                                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                                <span className="text-amber-800 text-sm">
+                                  Ao excluir este edital, todas as inscrições vinculadas também serão apagadas permanentemente.
+                                </span>
+                              </div>
+
+                              {/* Segunda confirmação */}
+                              <div className="mt-4 flex items-start gap-2">
+                                <input
+                                  type="checkbox"
+                                  id={`confirm-delete-${edital.id}`}
+                                  checked={confirmDelete}
+                                  onChange={(e) => setConfirmDelete(e.target.checked)}
+                                  disabled={isDeleting}
+                                />
+                                <label htmlFor={`confirm-delete-${edital.id}`} className="text-sm text-gray-700">
+                                  Eu entendo as consequências e desejo prosseguir com a exclusão deste edital.
+                                </label>
+                              </div>
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(edital.id)}
-                              disabled={isDeleting}
-                              className="bg-red-600 hover:bg-red-700"
+                              disabled={isDeleting || !confirmDelete}  // Só habilita se o checkbox estiver marcado
+                              className="bg-red-600 hover:bg-red-700 text-white"
                             >
                               {isDeleting ? "Excluindo..." : "Excluir"}
                             </AlertDialogAction>

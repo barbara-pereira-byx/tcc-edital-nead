@@ -43,7 +43,8 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     "Identidade",
     "Endereço",
     "Contato",
-    "Documentos"
+    "Documentos",
+    "Outros"
   ];
   
   const [categorias, setCategorias] = useState<string[]>(() => {

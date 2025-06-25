@@ -7,9 +7,9 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "npx jest",
+    "test:watch": "npx jest --watch",
+    "test:coverage": "npx jest --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",
@@ -56,7 +56,6 @@
     "date-fns": "^2.29.3",
     "embla-carousel-react": "8.5.1",
     "firebase": "^11.8.1",
-    
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "14.2.25",

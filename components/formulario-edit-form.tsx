@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { DatePicker } from "@/components/date-picker"
 import { useToast } from "@/components/ui/use-toast"
+import { useCategorias } from "@/hooks/use-categorias"
 import { PlusCircle, Trash2, MoveUp, MoveDown } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { CampoFormulario } from "@prisma/client"
@@ -27,28 +28,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
     formulario.dataFim ? new Date(formulario.dataFim) : undefined,
   )
 
-  const categoriasIniciais = [
-    "Dados Pessoais",
-    "Identidade",
-    "Endereço",
-    "Contato",
-    "Documentos",
-    "Outros"
-  ];
-  
-  const [categorias, setCategorias] = useState<string[]>(() => {
-    if (typeof window !== 'undefined') {
-      const categoriasArmazenadas = localStorage.getItem('formulario-categorias');
-      if (categoriasArmazenadas) {
-        try {
-          return JSON.parse(categoriasArmazenadas);
-        } catch (e) {
-          console.error("Erro ao carregar categorias do localStorage:", e);
-        }
-      }
-    }
-    return categoriasIniciais;
-  })
+  const { categorias, carregarCategorias, adicionarCategoria, adicionarCategoriasDosCampos } = useCategorias()
 
   const [novaCategoria, setNovaCategoria] = useState("")
   const [mostrarCampoNovaCategoria, setMostrarCampoNovaCategoria] = useState<number | null>(null)
@@ -62,19 +42,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   }
 
   const [campos, setCampos] = useState<CampoComArquivo[]>(() => {
-    const categoriasExistentes = new Set(categorias);
-    formulario.campos.forEach((campo: any) => {
-      if (campo.categoria && !categoriasExistentes.has(campo.categoria)) {
-        categoriasExistentes.add(campo.categoria);
-      }
-    });
-    const todasCategorias = Array.from(categoriasExistentes) as string[];
-    setCategorias(todasCategorias);
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('formulario-categorias', JSON.stringify(todasCategorias));
-    }
-    
     return formulario.campos
       .sort((a: any, b: any) => (a.ordem || 0) - (b.ordem || 0))
       .map((campo: any, index: number) => {
@@ -92,7 +59,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           tipo: campo.tipo,
           obrigatorio: campo.obrigatorio,
           secao: campo.secao || "Geral",
-          categoria: campo.categoria || categorias[0] || "Outros",
+          categoria: campo.categoria || null,
           tamanho: campo.tamanho || "255",
           arquivoFile: null,
           ordem: campo.ordem || index + 1,
@@ -102,6 +69,11 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         };
       });
   })
+
+  // Atualizar categorias com as existentes nos campos quando carregar
+  useEffect(() => {
+    adicionarCategoriasDosCampos(campos)
+  }, [campos, adicionarCategoriasDosCampos])
 
   const tiposCampo = [
     { valor: "0", nome: "Texto" },
@@ -115,9 +87,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
   const adicionarCampo = () => {
     const maiorOrdem = Math.max(...campos.map((c) => c.ordem || 0), 0);
     
-    // Use a categoria que foi definida ao adicionar um novo campo
-    const categoriaParaCampo = novaCategoria.trim() !== "" ? novaCategoria.trim() : categorias[0] || "Outros";
-
     setCampos([
       ...campos,
       {
@@ -127,7 +96,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         tipo: 0,
         obrigatorio: 1,
         secao: "Geral",
-        categoria: categoriaParaCampo, // Usar a nova categoria se definida
+        categoria: null,
         tamanho: "255",
         arquivoFile: null,
         ordem: maiorOrdem + 1,
@@ -136,9 +105,6 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
         updatedAt: new Date(),
       },
     ]);
-
-    // Limpar a nova categoria após adicionar o campo
-    setNovaCategoria("");
   }
 
   const removerCampo = (index: number) => {
@@ -275,6 +241,8 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
           title: "Formulário atualizado com sucesso",
           description: "As alterações foram salvas com sucesso",
         })
+        // Recarregar categorias após salvar
+        await carregarCategorias()
       } else {
         const error = await response.json()
         toast({
@@ -413,25 +381,20 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                     <Input
                       value={novaCategoria}
                       onChange={(e) => setNovaCategoria(e.target.value)}
-                      placeholder="Digite o nome da nova categoria"
+                      placeholder="Digite o nome da nova categoria e clique em Adicionar"
                       className="flex-1"
                     />
                     <Button 
                       type="button" 
-                      variant="outline" 
+                      variant="default" 
                       size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white font-semibold"
                       onClick={() => {
                         if (novaCategoria.trim() !== "") {
                           const categoriaTrimmed = novaCategoria.trim();
                           
-                          // Adicionar a nova categoria à lista global
-                          const novasCategorias = [...categorias, categoriaTrimmed];
-                          setCategorias(novasCategorias);
-                          
-                          // Salvar no localStorage
-                          if (typeof window !== 'undefined') {
-                            localStorage.setItem('formulario-categorias', JSON.stringify(novasCategorias));
-                          }
+                          // Adicionar a nova categoria
+                          const adicionada = adicionarCategoria(categoriaTrimmed);
                           
                           // Atualizar o campo atual com a nova categoria
                           const novosCampos = [...campos];
@@ -442,13 +405,14 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                           setNovaCategoria("");
                           setMostrarCampoNovaCategoria(null);
                           
-                          // Log para debug
-                          console.log(`Nova categoria adicionada: "${categoriaTrimmed}"`);
-                          console.log("Lista de categorias atualizada:", novasCategorias);
+                          toast({
+                            title: adicionada ? "Nova categoria criada" : "Categoria selecionada",
+                            description: `A categoria "${categoriaTrimmed}" foi ${adicionada ? 'criada e ' : ''}aplicada ao campo`,
+                          })
                         }
                       }}
                     >
-                      Adicionar
+                      ✓ Adicionar
                     </Button>
                     <Button 
                       type="button" 
@@ -466,7 +430,7 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Select
-                        value={campo.categoria}
+                        value={campo.categoria || ""}
                         onValueChange={(value) => {
                           if (value === "nova_categoria") {
                             setMostrarCampoNovaCategoria(index);
@@ -515,21 +479,23 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
               <Label htmlFor={`obrigatorio-${index}`}>Obrigatório</Label>
             </div>
 
-            {/* Nome do campo - sempre exibir para todos os tipos */}
-            <div className="space-y-2">
-              <Label htmlFor={`nome-${index}`}>Nome do Campo</Label>
-              <Input
-                id={`nome-${index}`}
-                value={campo.nome || ""}
-                onChange={(e) => {
-                  const novosCampos = [...campos]
-                  novosCampos[index].nome = e.target.value
-                  setCampos(novosCampos)
-                }}
-                placeholder="Ex: Nome Completo"
-                required
-              />
-            </div>
+            {/* Nome do campo - não exibir para checkbox */}
+            {campo.tipo !== 4 && (
+              <div className="space-y-2">
+                <Label htmlFor={`nome-${index}`}>Nome do Campo</Label>
+                <Input
+                  id={`nome-${index}`}
+                  value={campo.nome || ""}
+                  onChange={(e) => {
+                    const novosCampos = [...campos]
+                    novosCampos[index].nome = e.target.value
+                    setCampos(novosCampos)
+                  }}
+                  placeholder="Ex: Nome Completo"
+                  required
+                />
+              </div>
+            )}
 
             {/* Campo de tamanho para texto e área de texto */}
             {(campo.tipo === 0 || campo.tipo === 1) && (
@@ -553,7 +519,9 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
             {/* Campo checkbox ou select - texto/opções */}
             {(campo.tipo === 3 || campo.tipo === 4) && (
               <div className="space-y-2">
-                <Label htmlFor={`rotulo-${index}`}>{campo.tipo === 3 ? "Opções (separadas por vírgula)" : "Texto do Checkbox"}</Label>
+                <Label htmlFor={`rotulo-${index}`} className={campo.tipo === 4 ? "font-semibold" : ""}>
+                  {campo.tipo === 3 ? "Opções (separadas por vírgula)" : "Texto do Checkbox"}
+                </Label>
                 <Input
                   id={`rotulo-${index}`}
                   value={campo.rotulo || ""}
@@ -562,10 +530,12 @@ export function FormularioEditForm({ formulario }: FormularioEditFormProps) {
                     novosCampos[index].rotulo = e.target.value
                     setCampos(novosCampos)
                   }}
-                  placeholder={campo.tipo === 3 ? "Ex: Opção 1, Opção 2, Opção 3" : "Ex: Concordo com os termos"}
+                  placeholder={campo.tipo === 3 ? "Ex: Opção 1, Opção 2, Opção 3" : "Ex: Concordo com os termos e condições"}
+                  required={campo.tipo === 4}
+                  className={campo.tipo === 4 ? "border-blue-300 focus:border-blue-500" : ""}
                 />
                 {campo.tipo === 4 && (
-                  <p className="text-xs text-muted-foreground">Este texto aparecerá no botão de checkbox</p>
+                  <p className="text-sm text-gray-500 font-medium">Este texto aparecerá ao lado do checkbox para o usuário marcar</p>
                 )}
               </div>
             )}

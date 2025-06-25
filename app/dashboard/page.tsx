@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/session"
 import { getEditais } from "@/lib/data"
+import { PageRefresher } from "@/components/page-refresher"
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -18,6 +19,7 @@ export default async function DashboardPage() {
 
   return (
     <>
+      <PageRefresher />
       <DashboardHeader heading="Painel" text="Bem-vindo ao seu painel de editais acadêmicos" />
       <DashboardShell>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

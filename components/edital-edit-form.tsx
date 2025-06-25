@@ -25,6 +25,7 @@ import {
 
 interface Edital {
   id: string
+  codigo: string
   titulo: string
   senha: string
   dataCriacao: string
@@ -51,6 +52,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
+  const [codigo, setCodigo] = useState("")
   const [titulo, setTitulo] = useState("")
   const [dataCriacao, setDataCriacao] = useState<Date | undefined>(undefined)
   const [dataPublicacao, setDataPublicacao] = useState<Date | undefined>(undefined)
@@ -62,6 +64,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
 
   useEffect(() => {
     if (edital) {
+      setCodigo(edital.codigo || "")
       setTitulo(edital.titulo)
       setSenha(edital.senha || "")
       setDataCriacao(new Date(edital.dataCriacao))
@@ -192,6 +195,7 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
         .filter((arquivo) => arquivo.id) // Filtrar apenas arquivos com ID
 
       const body = {
+        codigo,
         titulo,
         senha,
         dataCriacao: dataCriacao?.toISOString() || "",
@@ -275,6 +279,16 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="codigo">Código do Edital</Label>
+                <Input
+                  id="codigo"
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  placeholder="Ex: EDITAL-2024-001"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Edital</Label>
                 <Input

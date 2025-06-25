@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   FileIcon as FilePdf,
 } from "lucide-react"
+import { PageRefresher } from "@/components/page-refresher"
 
 type Inscricao = {
   id: string
@@ -59,6 +60,7 @@ export default async function InscricoesPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <PageRefresher />
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
           <div className="flex gap-4 mb-4">

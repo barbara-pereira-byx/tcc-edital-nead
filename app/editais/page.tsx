@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { EditalFilter } from "@/components/edital-filter"
 import { EditalCard } from "@/components/edital-card"
 import EditaisPageClient from "./page-client"
+import { PageRefresher } from "@/components/page-refresher"
 
 export default async function EditaisPage({
   searchParams,
@@ -84,6 +85,7 @@ export default async function EditaisPage({
 
   return (
     <div className="flex min-h-screen flex-col">
+      <PageRefresher />
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">

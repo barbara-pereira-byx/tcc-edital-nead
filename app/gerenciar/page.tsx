@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import { AdminEditaisTable } from "@/components/admin/admin-editais-table";
+import { PageRefresher } from "@/components/page-refresher";
 
 export default async function GerenciarEditaisPage() {
   const session = await getServerSession(authOptions);
@@ -30,6 +31,7 @@ export default async function GerenciarEditaisPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <PageRefresher />
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
           <Link href="/editais" className="text-sm text-blue-600 hover:underline mb-2 inline-block">

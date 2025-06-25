@@ -26,6 +26,7 @@ interface FileUpload {
 export function EditalForm({ onEditalCreated }: EditalFormProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [codigo, setCodigo] = useState("")
   const [titulo, setTitulo] = useState("")
   const [dataCriacao, setDataCriacao] = useState<Date | undefined>(undefined)
   const [dataPublicacao, setDataPublicacao] = useState<Date | undefined>(undefined)
@@ -146,6 +147,16 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
     e.preventDefault()
     setIsLoading(true)
 
+    if (!codigo) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "O código do edital é obrigatório",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
     if (!titulo) {
       toast({
         title: "Erro ao criar edital",
@@ -260,6 +271,7 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       }
 
       // Adicionar dados ao FormData
+      formData.append("codigo", codigo)
       formData.append("titulo", titulo)
       formData.append("senha", senha)
       formData.append("dataCriacao", dataCriacao?.toISOString() || "")
@@ -310,6 +322,16 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="codigo">Código do Edital</Label>
+                <Input
+                  id="codigo"
+                  value={codigo}
+                  onChange={(e) => setCodigo(e.target.value)}
+                  placeholder="Ex: EDITAL-2024-001"
+                  required
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Edital</Label>
                 <Input

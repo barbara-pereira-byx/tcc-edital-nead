@@ -35,6 +35,7 @@ model Inscricao {
 
 model Edital {
   id                String              @id @default(cuid())
+  codigo            String?              @unique
   titulo            String
   dataCriacao       DateTime            @default(now())
   dataPublicacao    DateTime

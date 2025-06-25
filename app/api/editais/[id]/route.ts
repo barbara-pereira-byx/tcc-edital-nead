@@ -49,7 +49,7 @@ export async function PUT(
   }
 
   const body = await req.json()
-  const { titulo, senha, dataPublicacao, dataEncerramento, arquivos } = body
+  const { codigo, titulo, senha, dataPublicacao, dataEncerramento, arquivos } = body
 
   if (!titulo || !dataPublicacao) {
     return NextResponse.json({ message: "Dados incompletos" }, { status: 400 })
@@ -67,6 +67,7 @@ export async function PUT(
   const editalAtualizado = await prisma.edital.update({
     where: { id: id },
     data: {
+      codigo,
       titulo,
       senha,
       dataPublicacao: new Date(dataPublicacao),

@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData();
+    const codigo = formData.get("codigo") as string;
     const titulo = formData.get("titulo") as string;
     const senha = formData.get("senha") as string;
     const dataCriacao = new Date(formData.get("dataCriacao") as string);
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     // Criar o edital no banco de dados
     const edital = await prisma.edital.create({
       data: {
+        codigo,
         titulo,
         senha,
         dataCriacao,

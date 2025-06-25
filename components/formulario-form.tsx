@@ -682,7 +682,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <div className="text-center space-y-2">
           <h3 className="text-lg font-medium">Criando formulário...</h3>
-          <p className="text-sm text-gray-600">Configurando campos padrão e salvando dados</p>
+          <p className="text-sm text-gray-600">Configurando campos e salvando dados</p>
         </div>
       </div>
     )

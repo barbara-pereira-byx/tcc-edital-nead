@@ -354,7 +354,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                         <span className="truncate max-w-[calc(100%-4rem)] block">{resposta.valor || "-"}</span>
                                       </div>
                                       
-                                      {/* Lista de arquivos */}
+                                  {/* Lista de arquivos */}
                                   {resposta.arquivos && resposta.arquivos.length > 0 ? (
                                     <div className="space-y-2 mt-2">
                                       {resposta.arquivos.map((arquivo) => (
@@ -447,12 +447,12 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                                       </div>
                                       <div className="flex gap-2">
                                         <Button variant="outline" size="sm" asChild title="Visualizar">
-                                          <a href={`/api/arquivos/${inscricoes.id}/respostas/${arquivo.id}`} target="_blank" rel="noopener noreferrer">
+                                          <a href={`/api/arquivo/${arquivo.id}`} target="_blank" rel="noopener noreferrer">
                                             <Eye className="h-4 w-4" />
                                           </a>
                                         </Button>
                                         <Button variant="outline" size="sm" asChild title="Baixar">
-                                          <a href={`/api/arquivos/${inscricoes.id}/respostas/${arquivo.id}?download=true`} download>
+                                          <a href={`/api/arquivo/${arquivo.id}?download=true`} download>
                                             <Download className="h-4 w-4" />
                                           </a>
                                         </Button>

@@ -94,7 +94,6 @@ export default async function InscritosPage({
     return renderSenhaForm(edital, "Erro ao verificar o token. Por favor, forneça a senha novamente.")
   }
 }
-
 // Função para renderizar o formulário de senha
 function renderSenhaForm(edital: any, errorMessage?: string) {
   return (
@@ -114,20 +113,17 @@ function renderSenhaForm(edital: any, errorMessage?: string) {
             <h1 className="text-2xl font-bold mb-2">{edital.titulo}</h1>
             <p className="text-muted-foreground">Acesso à lista de inscritos</p>
           </div>
-
           <Card>
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-6">Verificação de Acesso</h2>
               <p className="mb-6 text-muted-foreground">
                 Para acessar a lista de inscritos neste edital, é necessário fornecer a senha de acesso.
               </p>
-
               {errorMessage && (
                 <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
                   {errorMessage}
                 </div>
               )}
-
               {edital.senha ? (
                 <SenhaEditalForm editalId={edital.id} senha={edital.senha} redirectToInscritos={true} />
               ) : (
@@ -142,7 +138,6 @@ function renderSenhaForm(edital: any, errorMessage?: string) {
     </div>
   )
 }
-
 // Função para renderizar a lista de inscritos
 function renderInscritosList(edital: any, inscricoes: any[]) {
   return (

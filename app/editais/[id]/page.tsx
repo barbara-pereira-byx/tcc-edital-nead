@@ -106,11 +106,14 @@ export default async function EditalPage({ params }: { params: { id: string } })
 
   const statusEdital = getStatusEdital()
 
-  // Buscar inscrições para administradores
+  // Buscar inscrições ativas para administradores
   const inscricoes =
     isAdmin && edital.formulario
       ? await prisma.formularioUsuario.findMany({
-          where: { formularioId: edital.formulario.id },
+          where: { 
+            formularioId: edital.formulario.id,
+            status: "ATIVO"
+          },
           include: { usuario: true },
           orderBy: { dataHora: "desc" },
         })

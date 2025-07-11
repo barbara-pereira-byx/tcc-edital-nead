@@ -10,17 +10,13 @@ import { getInscricaoById } from "@/lib/data"
 
 export default async function InscricaoDetailPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser()
-
   if (!user) {
     redirect("/ediatis")
   }
-
   const inscricao = await getInscricaoById(params.id)
-
   if (!inscricao) {
     redirect("/dashboard/inscricoes")
   }
-
   return (
     <>
       <DashboardHeader heading="Detalhes da Inscrição" text={`Inscrição para ${inscricao.edital.titulo}`}>

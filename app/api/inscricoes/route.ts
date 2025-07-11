@@ -178,7 +178,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const formularioId = searchParams.get("formularioId")
 
-    const where: any = {}
+    const where: any = {
+      status: "ATIVO" // Filtrar apenas inscrições ativas
+    }
 
     // Se for administrador e tiver um formularioId, busca todas as inscrições daquele formulário
     if (session.user.tipo === 1 && formularioId) {

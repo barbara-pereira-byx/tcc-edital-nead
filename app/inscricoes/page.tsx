@@ -35,6 +35,7 @@ export default async function InscricoesPage() {
   const inscricoes = await prisma.formularioUsuario.findMany({
     where: {
       usuarioId: session.user.id,
+      status: "ATIVO"
     },
     include: {
       formulario: {

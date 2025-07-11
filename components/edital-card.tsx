@@ -63,7 +63,14 @@ export function EditalCard({ edital }: EditalCardProps) {
             {status.label}
           </Badge>
         </div>
-        <CardTitle className="mt-1">{edital.titulo}</CardTitle>
+        <CardTitle className="line-clamp-2 mt-1">
+          {edital.codigo && (
+            <span className="text-sm font-mono text-muted-foreground block mb-1">
+              {edital.codigo}
+            </span>
+          )}
+          {edital.titulo}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 gap-2 text-sm">

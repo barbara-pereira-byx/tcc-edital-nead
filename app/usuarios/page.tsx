@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { UserManagement } from "@/components/user-management"
+import { PageRefresher } from "@/components/page-refresher"
 
 export default async function GerenciarUsuariosPage() {
   const session = await getServerSession(authOptions)
@@ -24,6 +25,7 @@ export default async function GerenciarUsuariosPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <PageRefresher />
       <main className="flex-1 bg-slate-50 py-8">
         <div className="container px-4">
         <Link href="/editais" className="text-sm text-blue-600 hover:underline mb-2 inline-block">

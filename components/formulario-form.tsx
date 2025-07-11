@@ -37,6 +37,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
   const [dataInicio, setDataInicio] = useState<Date | undefined>(undefined)
   const [dataFim, setDataFim] = useState<Date | undefined>(undefined)
   const [formularioId, setFormularioId] = useState<string | undefined>(undefined)
+  const [isCreatingForm, setIsCreatingForm] = useState(false)
   // Usar localStorage para persistir as categorias entre sessões
   const categoriasIniciais = [
     "Dados Pessoais",
@@ -290,6 +291,7 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     const carregarDadosEdital = async () => {
       if (!editalId || formularioCriado) return
 
+      setIsCreatingForm(true)
       try {
         const response = await fetch(`/api/editais/${editalId}`)
         if (!response.ok) throw new Error("Erro ao buscar dados do edital")
@@ -375,6 +377,8 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
           description: "Não foi possível carregar/criar o formulário",
           variant: "destructive",
         })
+      } finally {
+        setIsCreatingForm(false)
       }
     }
 
@@ -671,6 +675,19 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
     }
   }
 
+  // Mostrar tela de loading enquanto cria o formulário
+  if (isCreatingForm) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center space-y-2">
+          <h3 className="text-lg font-medium">Criando formulário...</h3>
+          <p className="text-sm text-gray-600">Configurando campos e salvando dados</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
@@ -694,14 +711,6 @@ export function FormularioForm({ editalId, onFormularioCreated }: FormularioForm
           <DatePicker date={dataFim} setDate={setDataFim} />
         </div>
       </div>
-
-      {/* Mostrar informações sobre o estado do formulário */}
-      {editalId && (
-        <div className="p-2 bg-gray-50 rounded-md text-sm text-gray-600">
-          Este formulário será associado ao Edital ID: {editalId}
-          {formularioId && <span className="block mt-1">Formulário ID: {formularioId} (modo edição)</span>}
-        </div>
-      )}
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">

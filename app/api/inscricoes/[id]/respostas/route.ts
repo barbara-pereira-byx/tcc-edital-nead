@@ -17,12 +17,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
 
-    // Verificar se o usuário é administrador
-    if (session.user.tipo !== 1) {
-      console.log(`Usuário ${session.user.id} não é administrador`);
-      return NextResponse.json({ message: "Apenas administradores podem acessar esta rota" }, { status: 403 })
-    }
-
     const inscricao = await prisma.formularioUsuario.findUnique({
       where: { id: params.id },
       include: {

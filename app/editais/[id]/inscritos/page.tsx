@@ -42,12 +42,11 @@ export default async function InscritosPage({
 
   // Se for administrador, permite acesso direto
   if (isAdmin) {
-    // Buscar inscrições ativas
+    // Buscar todas as inscrições
     const inscricoes = edital.formulario
       ? await prisma.formularioUsuario.findMany({
           where: { 
             formularioId: edital.formulario.id,
-            status: "ATIVO"
           },
           include: { usuario: true },
           orderBy: { dataHora: "desc" },
@@ -82,12 +81,11 @@ export default async function InscritosPage({
       return renderSenhaForm(edital, "Token inválido. Por favor, forneça a senha correta.")
     }
     
-    // Token válido, buscar inscrições ativas
+    // Token válido, buscar todas as inscrições
     const inscricoes = edital.formulario
       ? await prisma.formularioUsuario.findMany({
           where: { 
             formularioId: edital.formulario.id,
-            status: "ATIVO"
           },
           include: { usuario: true },
           orderBy: { dataHora: "desc" },

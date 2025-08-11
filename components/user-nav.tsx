@@ -79,6 +79,9 @@ export function UserNav() {
             <DropdownMenuItem asChild>
               <Link href="/usuarios">Gerenciar Usuários</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/logs-inscricao">Logs de Inscrição</Link>
+            </DropdownMenuItem>
           </>
         ) : (
           <>

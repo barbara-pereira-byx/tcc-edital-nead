@@ -243,6 +243,13 @@ export default async function InscricaoDetalhesPage({ params }: { params: { id: 
                 </p>
               </div>
 
+              {inscricao.status === 'CANCELADO' && inscricao.observacaoCancelamento && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                  <h4 className="font-medium text-red-800 mb-2">Motivo do Cancelamento:</h4>
+                  <p className="text-red-700 text-sm">{inscricao.observacaoCancelamento}</p>
+                </div>
+              )}
+
               <div className="flex justify-between mt-4">
                 <Button variant="outline" asChild>
                   <Link href={`/editais/${inscricao.formulario.edital.id}`}>Ver Edital Completo</Link>

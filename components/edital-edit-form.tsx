@@ -284,10 +284,11 @@ export function EditalEditForm({ edital }: EditalEditFormProps) {
                 <Input
                   id="codigo"
                   value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
+                  readOnly
+                  className="bg-slate-50 cursor-not-allowed"
                   placeholder="Ex: EDITAL-2024-001"
-                  required
                 />
+                <p className="text-xs text-muted-foreground">O código do edital não pode ser alterado após a criação</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Edital</Label>

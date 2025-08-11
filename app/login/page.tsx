@@ -37,7 +37,14 @@ export default function LoginPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    
+    if (name === 'cpf') {
+      // Permitir apenas números e limitar a 11 dígitos
+      const numericValue = value.replace(/\D/g, '').slice(0, 11)
+      setFormData((prev) => ({ ...prev, [name]: numericValue }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

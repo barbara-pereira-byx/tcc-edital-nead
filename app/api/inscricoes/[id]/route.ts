@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { registrarLogInscricao } from "@/lib/log-inscricao";
 
 export async function GET(
   request: NextRequest,
@@ -63,12 +64,19 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     if (!session) {
       return NextResponse.json({ message: "Não autorizado" }, { status: 401 })
     }
+
+    const { observacao } = await req.json().catch(() => ({ observacao: null }))
     const inscricao = await prisma.formularioUsuario.findUnique({
       where: {
         id: params.id,
       },
       include: {
-        formulario: true,
+        formulario: {
+          include: {
+            edital: true,
+          },
+        },
+        usuario: true,
       },
     })
     if (!inscricao) {
@@ -89,13 +97,27 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       )
     }
 
-    await prisma.formularioUsuario.update({
+    const updatedInscricao = await prisma.formularioUsuario.update({
       where: { id: params.id },
       data: {
-        status: "CANCELADO" as any,
+        status: "CANCELADO",
+        observacaoCancelamento: observacao || null,
       },
     })
 
+    // Registrar log de cancelamento
+    const acao = inscricao.usuarioId === session.user.id ? "CANCELAMENTO_USUARIO" : "CANCELAMENTO_ADMIN"
+    await registrarLogInscricao({
+      usuarioInscricaoId: inscricao.usuario.id,
+      usuarioInscricaoCpf: inscricao.usuario.cpf,
+      usuarioInscricaoNome: inscricao.usuario.nome,
+      usuarioAcaoId: session.user.id,
+      usuarioAcaoCpf: session.user.cpf,
+      usuarioAcaoNome: session.user.nome,
+      acao,
+      editalTitulo: inscricao.formulario.edital?.titulo,
+      editalCodigo: inscricao.formulario.edital?.codigo,
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

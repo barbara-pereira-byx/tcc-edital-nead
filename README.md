@@ -17,6 +17,7 @@ Este projeto tem como objetivo refazer a tela de editais do Nead e incluir algum
 - **Filtros Avançados:** Facilita a busca de editais específicos.
 - **Notificações:** Informa os usuários sobre novos editais.
 - **FAQ:** Seção de perguntas frequentes para esclarecer dúvidas comuns.
+- **Logs de Inscrição:** Sistema de auditoria que registra todas as ações relacionadas às inscrições (apenas para administradores).
 
 ## Público-Alvo
 

@@ -20,6 +20,20 @@ export async function POST(request: NextRequest) {
       ? new Date(formData.get("dataEncerramento") as string)
       : undefined;
 
+    // Verificar se o código já existe
+    if (codigo) {
+      const editalExistente = await prisma.edital.findUnique({
+        where: { codigo }
+      });
+      
+      if (editalExistente) {
+        return NextResponse.json(
+          { message: "Já existe um edital com este código. Por favor, escolha um código diferente." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Obter IDs dos arquivos
     const arquivosIds = formData.getAll("arquivosIds") as string[];
     

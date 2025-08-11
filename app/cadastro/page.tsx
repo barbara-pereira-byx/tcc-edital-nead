@@ -67,9 +67,9 @@ export default function CadastroPage() {
     const { name, value } = e.target
 
     if (name === "cpf") {
-      // Bloqueia entrada para mais que 11 dígitos e remove qualquer caractere que não seja número
-      if (value.length > 11) return
-      setFormData((prev) => ({ ...prev, [name]: value.replace(/\D/g, "") }))
+      // Permitir apenas números e limitar a 11 dígitos
+      const numericValue = value.replace(/\D/g, '').slice(0, 11)
+      setFormData((prev) => ({ ...prev, [name]: numericValue }))
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }))
     }

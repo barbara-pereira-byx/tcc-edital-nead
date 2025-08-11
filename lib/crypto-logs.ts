@@ -1,14 +1,14 @@
 import crypto from "crypto"
 
 const ALGORITHM = 'aes-256-cbc'
-const SECRET_KEY = process.env.LOG_ENCRYPTION_KEY || 'default-key-for-logs-encryption-32'
+const SECRET_KEY = crypto.scryptSync(process.env.LOG_ENCRYPTION_KEY || 'default-key-for-logs-encryption-32', 'salt', 32)
 const IV_LENGTH = 16
 
 export function criptografarCampo(valor: string): string {
   if (!valor) return ""
   
   const iv = crypto.randomBytes(IV_LENGTH)
-  const cipher = crypto.createCipher(ALGORITHM, SECRET_KEY)
+  const cipher = crypto.createCipheriv(ALGORITHM, SECRET_KEY, iv)
   let encrypted = cipher.update(valor, 'utf8', 'hex')
   encrypted += cipher.final('hex')
   
@@ -25,7 +25,7 @@ export function descriptografarCampo(valorCriptografado: string): string {
     const iv = Buffer.from(parts[0], 'hex')
     const encryptedText = parts[1]
     
-    const decipher = crypto.createDecipher(ALGORITHM, SECRET_KEY)
+    const decipher = crypto.createDecipheriv(ALGORITHM, SECRET_KEY, iv)
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8')
     decrypted += decipher.final('utf8')
     

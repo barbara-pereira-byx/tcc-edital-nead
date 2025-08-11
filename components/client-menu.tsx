@@ -20,6 +20,7 @@ import {
   ChevronRight,
   UserPlus,
   Loader2,
+  ScrollText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -35,7 +36,14 @@ export default function ClientMenu() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    
+    if (name === 'cpf') {
+      // Permitir apenas números e limitar a 11 dígitos
+      const numericValue = value.replace(/\D/g, '').slice(0, 11)
+      setFormData((prev) => ({ ...prev, [name]: numericValue }))
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }))
+    }
   }
 
   const handleLogout = async () => {
@@ -193,6 +201,16 @@ export default function ClientMenu() {
                   >
                     <Users className="mr-2 h-5 w-5 text-blue-600" />
                     <span>Gerenciar Usuários</span>
+                    <ChevronRight className="ml-auto h-4 w-4 text-slate-400" />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/logs-inscricao"
+                    className="flex items-center text-slate-700 hover:bg-blue-50 hover:text-blue-700 px-3 py-2 rounded-md transition-colors"
+                  >
+                    <ScrollText className="mr-2 h-5 w-5 text-blue-600" />
+                    <span>Logs de Inscrição</span>
                     <ChevronRight className="ml-auto h-4 w-4 text-slate-400" />
                   </Link>
                 </li>

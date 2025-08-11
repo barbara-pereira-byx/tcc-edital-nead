@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -46,6 +48,8 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false)
   const [respostas, setRespostas] = useState<any[]>([])
+  const [observacaoCancelamento, setObservacaoCancelamento] = useState("")
+  const [observacaoBulk, setObservacaoBulk] = useState("")
   const { data: session } = useSession()
 
   const isAdmin = session?.user?.tipo === 1
@@ -104,6 +108,10 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
       setIsLoading(true)
       const response = await fetch(`/api/inscricoes/${inscricaoId}`, {
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ observacao: observacaoCancelamento }),
       })
 
       if (response.ok) {
@@ -145,7 +153,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ ids: selectedIds }),
+        body: JSON.stringify({ ids: selectedIds, observacao: observacaoBulk }),
       })
 
       if (response.ok) {
@@ -256,6 +264,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
               <TableHead>Nome</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Data de Inscrição</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -273,6 +282,17 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
                   <TableCell className="font-medium">{inscricao.usuario.nome}</TableCell>
                   <TableCell>{inscricao.usuario.email}</TableCell>
                   <TableCell>{formatarData(inscricao.dataHora)}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      className={
+                        inscricao.status === "ATIVO" 
+                          ? "bg-green-100 text-green-800" 
+                          : "bg-red-100 text-red-800"
+                      }
+                    >
+                      {inscricao.status === "ATIVO" ? "Ativa" : "Cancelada"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" onClick={() => abrirDetalhes(inscricao)} disabled={isLoading}>
@@ -298,7 +318,7 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
                   Nenhum resultado encontrado para "{searchTerm}"
                 </TableCell>
               </TableRow>
@@ -525,14 +545,20 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
             <AlertDialogTitle>Cancelar Inscrição</AlertDialogTitle>
             <AlertDialogDescription>
               Você tem certeza que deseja cancelar a inscrição de <strong>{selectedInscricao?.usuario?.nome}</strong>?
-              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <span className="text-amber-800 text-sm">
-                  Esta ação não pode ser desfeita. A inscrição será permanentemente removida do sistema.
-                </span>
-              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="observacao">Motivo do cancelamento (opcional)</Label>
+              <Textarea
+                id="observacao"
+                placeholder="Descreva o motivo do cancelamento da inscrição..."
+                value={observacaoCancelamento}
+                onChange={(e) => setObservacaoCancelamento(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
@@ -558,15 +584,20 @@ export function ListaInscritos({ inscricoes, formulario }: ListaInscritosProps) 
             <AlertDialogTitle>Cancelar Múltiplas Inscrições</AlertDialogTitle>
             <AlertDialogDescription>
               Você tem certeza que deseja cancelar <strong>{selectedIds.length}</strong> inscrições?
-              <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md flex items-start gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                <span className="text-amber-800 text-sm">
-                  Esta ação não pode ser desfeita. Todas as inscrições selecionadas serão permanentemente removidas do
-                  sistema.
-                </span>
-              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="observacaoBulk">Motivo do cancelamento (opcional)</Label>
+              <Textarea
+                id="observacaoBulk"
+                placeholder="Descreva o motivo do cancelamento das inscrições..."
+                value={observacaoBulk}
+                onChange={(e) => setObservacaoBulk(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancelar</AlertDialogCancel>
             <AlertDialogAction

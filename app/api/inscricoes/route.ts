@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { registrarLogInscricao } from "@/lib/log-inscricao"
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
     const formulario = await prisma.formulario.findUnique({
       where: { id: formularioId },
-      include: { campos: true },
+      include: { campos: true, edital: true },
     });
 
     if (!formulario) {
@@ -67,7 +68,20 @@ export async function POST(req: Request) {
       const inscricaoReativada = await prisma.formularioUsuario.update({
         where: { id: inscricaoExistente.id },
         data: { status: "ATIVO" as any },
-      });
+      })
+
+      // Registrar log de reativação de inscrição
+      await registrarLogInscricao({
+        usuarioInscricaoId: session.user.id,
+        usuarioInscricaoCpf: session.user.cpf,
+        usuarioInscricaoNome: session.user.nome,
+        usuarioAcaoId: session.user.id,
+        usuarioAcaoCpf: session.user.cpf,
+        usuarioAcaoNome: session.user.nome,
+        acao: "INSCRICAO",
+        editalTitulo: formulario.edital?.titulo,
+        editalCodigo: formulario.edital?.codigo,
+      })
 
       for (const campo of formulario.campos) {
         const value = formData.get(campo.id);
@@ -86,8 +100,7 @@ export async function POST(req: Request) {
 
           for (const fileItem of files) {
             if (fileItem instanceof File) {
-              const storagePath = `inscricoes/${session.user.id}/${inscricaoReativada.id}/${fileItem.name}`;
-              await processarArquivo(fileItem, campoResult.id, inscricaoReativada.id, storagePath);
+              await processarArquivo(fileItem, campoResult.id, inscricaoReativada.id);
             }
           }
         } else {
@@ -127,7 +140,20 @@ export async function POST(req: Request) {
         usuarioId: session.user.id,
         formularioId,
       },
-    });
+    })
+
+    // Registrar log de nova inscrição
+    await registrarLogInscricao({
+      usuarioInscricaoId: session.user.id,
+      usuarioInscricaoCpf: session.user.cpf,
+      usuarioInscricaoNome: session.user.nome,
+      usuarioAcaoId: session.user.id,
+      usuarioAcaoCpf: session.user.cpf,
+      usuarioAcaoNome: session.user.nome,
+      acao: "INSCRICAO",
+      editalTitulo: formulario.edital?.titulo,
+      editalCodigo: formulario.edital?.codigo,
+    })
 
     for (const campo of formulario.campos) {
       if (campo.tipo === 6) {
@@ -142,8 +168,7 @@ export async function POST(req: Request) {
 
         for (const fileItem of files) {
           if (fileItem instanceof File) {
-            const storagePath = `inscricoes/${session.user.id}/${inscricao.id}/${fileItem.name}`;
-            await processarArquivo(fileItem, campoResult.id, inscricao.id, storagePath);
+            await processarArquivo(fileItem, campoResult.id, inscricao.id);
           }
         }
       } else {
@@ -178,9 +203,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const formularioId = searchParams.get("formularioId")
 
-    const where: any = {
-      status: "ATIVO" // Filtrar apenas inscrições ativas
-    }
+    const where: any = {}
 
     // Se for administrador e tiver um formularioId, busca todas as inscrições daquele formulário
     if (session.user.tipo === 1 && formularioId) {

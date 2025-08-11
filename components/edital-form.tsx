@@ -34,12 +34,32 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
   const [senha, setSenha] = useState("")
   const [arquivos, setArquivos] = useState<FileUpload[]>([])
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const [codigoExiste, setCodigoExiste] = useState(false)
+  const [verificandoCodigo, setVerificandoCodigo] = useState(false)
   const hoje = new Date()
 
   useEffect(() => {
     const hoje = new Date()
     setDataCriacao(hoje)
   }, [])
+
+  const verificarCodigo = async (codigo: string) => {
+    if (!codigo.trim()) {
+      setCodigoExiste(false)
+      return
+    }
+    
+    setVerificandoCodigo(true)
+    try {
+      const response = await fetch(`/api/editais/verificar-codigo?codigo=${encodeURIComponent(codigo)}`)
+      const data = await response.json()
+      setCodigoExiste(data.existe)
+    } catch (error) {
+      console.error('Erro ao verificar código:', error)
+    } finally {
+      setVerificandoCodigo(false)
+    }
+  }
 
   const generateRandomPassword = () => {
     const length = 20
@@ -151,6 +171,16 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
       toast({
         title: "Erro ao criar edital",
         description: "O código do edital é obrigatório",
+        variant: "destructive",
+      })
+      setIsLoading(false)
+      return
+    }
+
+    if (codigoExiste) {
+      toast({
+        title: "Erro ao criar edital",
+        description: "Este código já está em uso. Escolha um código diferente.",
         variant: "destructive",
       })
       setIsLoading(false)
@@ -327,10 +357,20 @@ export function EditalForm({ onEditalCreated }: EditalFormProps) {
                 <Input
                   id="codigo"
                   value={codigo}
-                  onChange={(e) => setCodigo(e.target.value)}
+                  onChange={(e) => {
+                    setCodigo(e.target.value)
+                    verificarCodigo(e.target.value)
+                  }}
                   placeholder="Ex: EDITAL-2024-001"
+                  className={codigoExiste ? "border-red-500" : ""}
                   required
                 />
+                {verificandoCodigo && (
+                  <p className="text-xs text-gray-500">Verificando código...</p>
+                )}
+                {codigoExiste && (
+                  <p className="text-xs text-red-500">Este código já está em uso. Escolha um código diferente.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="titulo">Título do Edital</Label>

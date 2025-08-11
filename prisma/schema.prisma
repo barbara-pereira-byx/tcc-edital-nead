@@ -93,6 +93,7 @@ model FormularioUsuario {
   campos            FormularioUsuarioCampo[]
   arquivos          ArquivoUsuario[]        // Relação com os arquivos enviados pelo usuário
   status            StatusInscricao         @default(ATIVO)
+  observacaoCancelamento String?             // Motivo do cancelamento pelo administrador
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
 }
@@ -128,4 +129,21 @@ model ArquivoUsuario {
   inscricaoId       String                  // Relação com a inscrição
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
+}
+
+// Tabela para logs de inscrições
+model LogInscricao {
+  id                String                  @id @default(cuid())
+  // Dados do usuário da inscrição (quem se inscreveu)
+  usuarioInscricaoId    String              // ID do usuário da inscrição
+  usuarioInscricaoCpf   String              // CPF do usuário da inscrição
+  usuarioInscricaoNome  String              // Nome do usuário da inscrição
+  // Dados de quem realizou a ação
+  usuarioAcaoId         String              // ID de quem realizou a ação
+  usuarioAcaoCpf        String              // CPF de quem realizou a ação
+  usuarioAcaoNome       String              // Nome de quem realizou a ação
+  acao              String                  // Ação realizada: INSCRICAO, CANCELAMENTO_USUARIO, CANCELAMENTO_ADMIN, CANCELAMENTO_COMISSAO
+  editalTitulo      String?                 // Título do edital (opcional)
+  editalCodigo      String?                 // Código do edital (opcional)
+  createdAt         DateTime                @default(now())
 }

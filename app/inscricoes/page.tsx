@@ -35,7 +35,6 @@ export default async function InscricoesPage() {
   const inscricoes = await prisma.formularioUsuario.findMany({
     where: {
       usuarioId: session.user.id,
-      status: "ATIVO"
     },
     include: {
       formulario: {
@@ -117,7 +116,13 @@ export default async function InscricoesPage() {
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
                       <CardTitle>{inscricao.formulario.edital.titulo}</CardTitle>
-                      <Badge className="self-start md:self-auto">
+                      <Badge 
+                        className={
+                          inscricao.status === 'CANCELADO' 
+                            ? "self-start md:self-auto bg-red-100 text-red-800" 
+                            : "self-start md:self-auto bg-green-100 text-green-800"
+                        }
+                      >
                         {inscricao.status === 'CANCELADO' ? 'CANCELADO' : 'ATIVO'}
                       </Badge>
                     </div>
